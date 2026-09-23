@@ -1,0 +1,44 @@
+{
+  "id": 1,
+  "login": "jdoe",
+  "email": "jdoe@example.com",
+  "phone": "hidden",
+  "displayname": "John Doe",
+  "usual_full_name": "Johnny Doe",
+  "image": {
+    "link": "https://cdn.example.com/users/jdoe.jpg",
+    "versions": { "large": "https://cdn.example.com/users/large_jdoe.jpg", "medium": "https://cdn.example.com/users/medium_jdoe.jpg" }
+  },
+  "location": "c1r2s3",
+  "wallet": 120,
+  "correction_point": 5,
+  "pool_month": "july",
+  "pool_year": "2024",
+  "staff?": false,
+  "field_the_app_does_not_know": { "nested": [1, 2, 3] },
+  "cursus_users": [
+    {
+      "level": 4.67, "grade": "Pisciner", "begin_at": "2024-07-01T07:00:00.000Z",
+      "cursus": { "id": 9, "name": "C Piscine", "slug": "c-piscine" },
+      "skills": [ { "id": 1, "name": "Unix", "level": 5.0 } ]
+    },
+    {
+      "level": 14.19, "grade": "Transcender", "begin_at": "2024-10-01T07:00:00.000Z",
+      "cursus": { "id": 21, "name": "42cursus", "slug": "42cursus" },
+      "skills": [
+        { "id": 3, "name": "Imperative programming", "level": 10.5 },
+        { "id": 4, "name": "Unix", "level": 25.0 }
+      ]
+    }
+  ],
+  "projects_users": [
+    { "status": "finished", "validated?": true, "final_mark": 125, "marked_at": "2025-01-10T10:00:00.000Z", "cursus_ids": [21], "project": { "id": 1, "name": "Libft" } },
+    { "status": "finished", "validated?": false, "final_mark": 0, "marked_at": "2025-02-10T10:00:00.000Z", "cursus_ids": [21], "project": { "id": 2, "name": "Printf" } },
+    { "status": "in_progress", "validated?": null, "final_mark": null, "marked_at": null, "cursus_ids": [21], "project": { "id": 3, "name": "Shell" } },
+    { "status": "waiting_for_correction", "validated?": true, "final_mark": 100, "marked_at": null, "cursus_ids": [21], "project": { "id": 4, "name": "Pipex" } }
+  ],
+  "campus": [ { "id": 1, "name": "North" }, { "id": 2, "name": "South" } ],
+  "campus_users": [ { "campus_id": 1, "is_primary": false }, { "campus_id": 2, "is_primary": true } ],
+  "titles": [ { "id": 5, "name": "Mastermind %login" }, { "id": 6, "name": "Other" } ],
+  "titles_users": [ { "title_id": 5, "selected": true }, { "title_id": 6, "selected": false } ]
+}

@@ -1,41 +1,48 @@
 # Swifty Companion
 
-An Android app to look up a student profile through the intra API v2. Type a
-login and the app shows a profile card with the photo, level, coalition and
-contact details, the skills with their level and percentage, and every project
-the user has taken, validated or failed.
+An Android app to look up 42 student profiles through the 42 API v2. Type a
+login and the app shows the profile: photo, level, contact details, location,
+wallet and more.
 
 Built with Kotlin and Jetpack Compose.
 
 ## Features
 
-- Search by login, with clear messages for unknown logins, invalid input,
-  missing connection and server errors.
-- Profile card: photo inside a level ring, coalition color and logo, name,
-  login, grade, title, level, wallet and correction points. Tap it to flip it
-  and see the skill radar.
-- Details: email, phone, current location, campus and pool.
-- Skills of the selected cursus with level and percentage.
-- Projects grouped by cursus, filterable by status (validated, failed, in
-  progress).
-- Layout that adapts to small phones, large phones, tablets and landscape.
-- One access token reused across requests and renewed automatically when it
-  expires or is rejected.
+- Search by login. Invalid input, unknown logins, missing connection, rate
+  limiting and server errors each get their own message, with a retry button
+  when retrying can help.
+- Profile: photo framed in the coalition color, full name, login, selected
+  title, level and progress in the main cursus, grade, email, phone (or
+  "Hidden"), current location, wallet, correction points, campus and pool.
+- Refresh from the profile; back to the search with the top bar arrow or the
+  system back gesture.
+- One access token reused across requests and app restarts, renewed before it
+  expires and again if the server rejects it.
 - English and Spanish, following the system language.
+
+## Repository layout
+
+```
+.env.example     template for the API credentials (copy to .env)
+docs/            documentation
+android/         the Android project: open this folder in Android Studio
+```
 
 ## Requirements
 
-- Android Studio 2026.1 or newer (Android Gradle Plugin 9.4).
-- Android SDK 36 and an emulator or a device running Android 8.0 (API 26) or
-  newer.
-- An API application created at
-  <https://profile.intra.42.fr/oauth/applications> (any redirect URI works; the
-  app only uses the client credentials flow).
+- Android Studio 2026.1 or newer (Android Gradle Plugin 9.4.1, Gradle 9.7.1
+  through the wrapper).
+- Android SDK Platform 37 to compile. Android Studio offers to install it on the
+  first sync.
+- An emulator or a device running Android 8.0 (API 26) or newer.
+- A 42 API application created at
+  <https://profile.intra.42.fr/oauth/applications>. The redirect URI is not
+  used; the app only uses the client credentials flow.
 
 ## Configuration
 
-The API credentials are read from a `.env` file at the repository root, which
-is ignored by git:
+The API credentials are read from a `.env` file at the repository root (next
+to `.env.example`, not inside `android/`), which is ignored by git:
 
 ```
 cp .env.example .env
@@ -48,40 +55,78 @@ INTRA_CLIENT_ID=u-s4t2ud-...
 INTRA_CLIENT_SECRET=s-s4t2ud-...
 ```
 
-The values are compiled into the debug build. Rebuild after changing them.
+The values are compiled into the build, so rebuild after changing them. If they
+are missing the build still succeeds and the app explains what is wrong when a
+search is made. Application secrets expire periodically; if searches fail with
+"The API rejected the credentials", copy the current secret from the
+application page.
 
 ## Running
 
-1. Open the repository folder in Android Studio and let Gradle sync.
+1. Open the `android/` folder (not the repository root) in Android Studio and
+   let Gradle sync.
 2. Create a virtual device in Device Manager if there is none.
 3. Select the `app` configuration and press Run.
 
-From a terminal:
+From a terminal, starting at the repository root:
 
 ```
-./gradlew installDebug          # build and install on the running emulator/device
+cd android
+./gradlew installDebug          # build and install on the running emulator or device
 ./gradlew testDebugUnitTest     # unit tests
+./gradlew lintDebug             # static checks
 ```
 
 ## Usage
 
-1. Type a login and press Search (or the keyboard's search key).
-2. The profile opens if the login exists. Tap the card to flip it, switch
-   between the Skills and Projects tabs, and use the cursus chips when the user
-   has more than one cursus.
+1. Type a login and press Search or the keyboard's search key.
+2. The profile opens if the login exists. The refresh icon reloads it.
 3. Go back with the arrow in the top bar or the system back gesture.
+
+Filter Logcat by the tag `Auth` to see when the access token is reused or
+renewed. The token itself is never logged.
 
 ## How it works
 
 - **Architecture**: MVVM. Compose screens observe a `StateFlow` exposed by a
-  ViewModel; the ViewModel calls a repository, which uses Retrofit and OkHttp.
-  Dependencies are wired by hand in `AppContainer`.
-- **Authentication**: OAuth2 client credentials. The access token is kept in
-  memory and in the app's private preferences, and reused until shortly before
-  it expires. An OkHttp interceptor adds it to every request and renews it when
-  it is about to expire; an OkHttp authenticator renews it and replays the
-  request once if the server answers 401.
+  ViewModel; the ViewModel calls `UserRepository`, which uses Retrofit and
+  OkHttp and maps the JSON into plain Kotlin models. Dependencies are wired by
+  hand in `AppContainer`.
+- **Search flow**: the search screen validates the login, fetches the profile
+  and only then opens the profile screen, so the profile view never shows an
+  unknown login and every search error appears next to the text field.
+- **Authentication**: OAuth2 client credentials. `TokenManager` keeps the
+  access token in memory and in the app's private preferences and reuses it
+  until one minute before it expires. `AuthInterceptor` adds it to every
+  request and renews it when it is about to expire; `TokenAuthenticator`
+  renews it and replays the request once if the server answers 401. Renewal is
+  synchronized, so concurrent requests never ask for two tokens.
 - **Rate limit**: requests are spaced to stay under 2 per second, and a 429
-  answer is retried after the time the server asks for.
-- **Errors**: every failure is mapped to a typed error with its own message;
-  retry is offered when it can help.
+  answer is retried after the delay the server asks for.
+- **Errors**: every failure is mapped to a typed `AppError` with its own
+  translated message.
+
+## Project structure
+
+```
+android/
+  settings.gradle.kts, build.gradle.kts, gradle/    Gradle setup, wrapper and version catalog
+  app/build.gradle.kts                              app module; reads ../.env into BuildConfig
+  app/src/main/java/com/ravazque/swiftycompanion/
+    SwiftyApp.kt, AppContainer.kt, MainActivity.kt  app entry point and dependency wiring
+    model/                                          Profile and related models, AppError, login validation
+    data/                                           UserRepository, JSON to model mapping
+    data/auth/                                      token storage, renewal, interceptor, authenticator
+    data/net/                                       Retrofit interface, JSON models, HTTP client, rate limit
+    ui/                                             navigation, theme, search and profile screens
+  app/src/test/                                     unit tests and a local fake of the API
+```
+
+## Tests
+
+`./gradlew testDebugUnitTest` runs the unit tests on the JVM. The network tests
+use a local HTTP server that imitates the token and user endpoints, so they go
+through the real OkHttp and Retrofit stack without touching the API. They
+cover token reuse, reuse after a restart, renewal before expiry, renewal and
+replay after a 401, rejected credentials, error mapping (404, 429, 5xx,
+malformed JSON, no connection), JSON to model mapping and login validation.

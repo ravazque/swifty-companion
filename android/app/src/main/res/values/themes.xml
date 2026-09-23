@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#FF08090D</color>
+    <color name="accent">#FFE39F0B</color>
+
+    <style name="Theme.SwiftyCompanion" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+</resources>

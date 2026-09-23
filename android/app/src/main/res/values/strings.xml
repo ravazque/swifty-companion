@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Swifty Companion</string>
+
+    <string name="search_subtitle">Look up a student profile</string>
+    <string name="search_label">Login</string>
+    <string name="search_button">Search</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_back">Back</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_retry">Retry</string>
+
+    <string name="error_empty_login">Type a login</string>
+    <string name="error_invalid_login">A login only has lowercase letters, digits, hyphens and underscores</string>
+    <string name="error_not_found">No user with login %1$s</string>
+    <string name="error_network">No connection. Check your network and try again.</string>
+    <string name="error_rate_limited">Too many requests. Wait a moment and try again.</string>
+    <string name="error_missing_credentials">API credentials are missing. Add them to .env and rebuild.</string>
+    <string name="error_unauthorized">The API rejected the credentials. Check the secret in .env.</string>
+    <string name="error_forbidden">The API refused the request.</string>
+    <string name="error_server">The server returned an error (%1$d). Try again later.</string>
+    <string name="error_unexpected">Unexpected answer from the server.</string>
+
+    <string name="profile_level">Level %1$d · %2$d%%</string>
+    <string name="profile_staff">Staff</string>
+    <string name="profile_email">Email</string>
+    <string name="profile_phone">Phone</string>
+    <string name="profile_location">Location</string>
+    <string name="profile_wallet">Wallet</string>
+    <string name="profile_correction_points">Correction points</string>
+    <string name="profile_campus">Campus</string>
+    <string name="profile_pool">Pool</string>
+    <string name="profile_hidden">Hidden</string>
+    <string name="profile_unavailable">Unavailable</string>
+</resources>
