@@ -19,15 +19,19 @@
     <string name="error_server">El servidor ha devuelto un error (%1$d). Inténtalo más tarde.</string>
     <string name="error_unexpected">Respuesta inesperada del servidor.</string>
 
-    <string name="profile_level">Nivel %1$d · %2$d%%</string>
     <string name="profile_staff">Staff</string>
     <string name="profile_email">Email</string>
     <string name="profile_phone">Teléfono</string>
-    <string name="profile_location">Ubicación</string>
-    <string name="profile_wallet">Wallet</string>
-    <string name="profile_correction_points">Puntos de corrección</string>
     <string name="profile_campus">Campus</string>
     <string name="profile_pool">Piscina</string>
     <string name="profile_hidden">Oculto</string>
     <string name="profile_unavailable">No disponible</string>
+
+    <string name="card_level_tag">NV %1$d</string>
+    <string name="card_offline">Desconectado</string>
+    <string name="label_level">Nivel</string>
+    <string name="label_wallet">Wallet</string>
+    <string name="label_points">Puntos</string>
+    <string name="level_block_label">nivel en %1$s</string>
+    <string name="level_block_progress">%1$d%% hacia el nivel %2$d</string>
 </resources>

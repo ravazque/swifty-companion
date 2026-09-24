@@ -36,6 +36,13 @@ class ProfileMapperTest {
     }
 
     @Test
+    fun cursusSelectionFallsBackToTheMainOne() {
+        assertEquals("c-piscine", profile.cursusOrMain(9)?.slug)
+        assertEquals("42cursus", profile.cursusOrMain(999)?.slug)
+        assertEquals("42cursus", profile.cursusOrMain(null)?.slug)
+    }
+
+    @Test
     fun skillPercentagesUseTheChartScale() {
         val skills = profile.mainCursus!!.skills
         assertEquals("Unix", skills.first().name)

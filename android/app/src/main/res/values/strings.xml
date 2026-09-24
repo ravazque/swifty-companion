@@ -21,15 +21,19 @@
     <string name="error_server">The server returned an error (%1$d). Try again later.</string>
     <string name="error_unexpected">Unexpected answer from the server.</string>
 
-    <string name="profile_level">Level %1$d · %2$d%%</string>
     <string name="profile_staff">Staff</string>
     <string name="profile_email">Email</string>
     <string name="profile_phone">Phone</string>
-    <string name="profile_location">Location</string>
-    <string name="profile_wallet">Wallet</string>
-    <string name="profile_correction_points">Correction points</string>
     <string name="profile_campus">Campus</string>
     <string name="profile_pool">Pool</string>
     <string name="profile_hidden">Hidden</string>
     <string name="profile_unavailable">Unavailable</string>
+
+    <string name="card_level_tag">LV %1$d</string>
+    <string name="card_offline">Offline</string>
+    <string name="label_level">Level</string>
+    <string name="label_wallet">Wallet</string>
+    <string name="label_points">Points</string>
+    <string name="level_block_label">level in %1$s</string>
+    <string name="level_block_progress">%1$d%% towards level %2$d</string>
 </resources>

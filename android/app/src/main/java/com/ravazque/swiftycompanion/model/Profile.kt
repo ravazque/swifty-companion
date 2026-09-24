@@ -22,6 +22,8 @@ data class Profile(
     val coalition: Coalition?,
 ) {
     val mainCursus: Cursus? get() = cursus.firstOrNull()
+
+    fun cursusOrMain(id: Int?): Cursus? = cursus.firstOrNull { it.id == id } ?: mainCursus
 }
 
 data class Cursus(

@@ -23,6 +23,7 @@ data class ProfileUiState(
     val profile: Profile? = null,
     val loading: Boolean = false,
     val error: AppError? = null,
+    val selectedCursusId: Int? = null,
 )
 
 class ProfileViewModel(val login: String, private val repository: UserRepository) : ViewModel() {
@@ -35,6 +36,10 @@ class ProfileViewModel(val login: String, private val repository: UserRepository
 
     init {
         if (_state.value.profile == null) load()
+    }
+
+    fun selectCursus(id: Int) {
+        _state.update { it.copy(selectedCursusId = id) }
     }
 
     fun load() {

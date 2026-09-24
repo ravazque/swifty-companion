@@ -8,6 +8,10 @@ import androidx.compose.ui.graphics.Color
 private val DarkColors = darkColorScheme(
     primary = DefaultAccent,
     onPrimary = Ink,
+    secondary = Muted,
+    onSecondary = Ink,
+    secondaryContainer = Surface2,
+    onSecondaryContainer = TextMain,
     background = Ink,
     onBackground = TextMain,
     surface = Ink,

@@ -11,9 +11,16 @@ Built with Kotlin and Jetpack Compose.
 - Search by login. Invalid input, unknown logins, missing connection, rate
   limiting and server errors each get their own message, with a retry button
   when retrying can help.
-- Profile: photo framed in the coalition color, full name, login, selected
-  title, level and progress in the main cursus, grade, email, phone (or
-  "Hidden"), current location, wallet, correction points, campus and pool.
+- Profile card in the coalition's color: coalition logo and name, level tag,
+  photo inside a ring that fills with the progress towards the next level,
+  full name, login, grade, selected title, level, wallet, correction points and
+  the workstation the user is logged in at (or "Offline"). The card keeps its
+  proportions on every screen size.
+- Cursus selector when the user has more than one cursus (for example the
+  piscine and the main cursus): the card and the level panel follow the
+  selected one.
+- Level panel with the exact level and the percentage towards the next one.
+- Details: email, phone (or "Hidden"), campus and pool.
 - Refresh from the profile; back to the search with the top bar arrow or the
   system back gesture.
 - One access token reused across requests and app restarts, renewed before it
@@ -34,6 +41,9 @@ android/         the Android project: open this folder in Android Studio
   through the wrapper).
 - Android SDK Platform 37 to compile. Android Studio offers to install it on the
   first sync.
+- Gradle runs on JDK 25 (`android/gradle/gradle-daemon-jvm.properties`).
+  Android Studio uses its bundled runtime, which is JDK 25; from a terminal,
+  Gradle downloads a JDK 25 automatically the first time if none is installed.
 - An emulator or a device running Android 8.0 (API 26) or newer.
 - A 42 API application created at
   <https://profile.intra.42.fr/oauth/applications>. The redirect URI is not
@@ -105,6 +115,11 @@ renewed. The token itself is never logged.
   answer is retried after the delay the server asks for.
 - **Errors**: every failure is mapped to a typed `AppError` with its own
   translated message.
+- **Profile card**: drawn with Compose layouts and a `Canvas` for the level ring.
+  Every size inside the card is a multiple of one unit (card width / 32), so the
+  card scales as one piece; its text intentionally ignores the system font
+  scale to keep the proportions, while the rest of the app follows it. Images
+  are loaded with Coil, with an SVG decoder for coalition logos.
 
 ## Project structure
 
@@ -118,7 +133,9 @@ android/
     data/                                           UserRepository, JSON to model mapping
     data/auth/                                      token storage, renewal, interceptor, authenticator
     data/net/                                       Retrofit interface, JSON models, HTTP client, rate limit
-    ui/                                             navigation, theme, search and profile screens
+    ui/                                             navigation, theme, search screen
+    ui/profile/                                     profile screen, cursus selector, level panel, details
+    ui/profile/card/                                profile card and level ring
   app/src/test/                                     unit tests and a local fake of the API
 ```
 
@@ -129,4 +146,5 @@ use a local HTTP server that imitates the token and user endpoints, so they go
 through the real OkHttp and Retrofit stack without touching the API. They
 cover token reuse, reuse after a restart, renewal before expiry, renewal and
 replay after a 401, rejected credentials, error mapping (404, 429, 5xx,
-malformed JSON, no connection), JSON to model mapping and login validation.
+malformed JSON, no connection), JSON to model mapping, cursus selection and
+login validation.
