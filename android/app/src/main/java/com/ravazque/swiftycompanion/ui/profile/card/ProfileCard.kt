@@ -1,11 +1,16 @@
 package com.ravazque.swiftycompanion.ui.profile.card
 
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -20,6 +25,10 @@ import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,11 +36,13 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -63,13 +74,15 @@ import com.ravazque.swiftycompanion.ui.theme.SwiftyTheme
 import com.ravazque.swiftycompanion.ui.theme.TextMain
 import java.util.Locale
 
-// Front of the profile card. Every size is a multiple of one unit (card width / 32), so the card
-// scales as a single piece on any screen; its text deliberately ignores the system font scale.
+// Profile card: the front here, the skills chart on the back (CardBack.kt); a tap flips it.
+// Every size is a multiple of one unit (card width / 32), so the card scales as a single piece
+// on any screen; its text deliberately ignores the system font scale.
 
 private const val CARD_RATIO = 5f / 7f
+private val FlipEasing = CubicBezierEasing(0.2f, 0.7f, 0.3f, 1f)
 
 @Immutable
-private class CardScale(private val unit: Dp, private val density: Density) {
+internal class CardScale(private val unit: Dp, private val density: Density) {
     fun dp(n: Float): Dp = unit * n
     fun sp(n: Float): TextUnit = with(density) { (unit * n).toSp() }
 }
@@ -77,37 +90,80 @@ private class CardScale(private val unit: Dp, private val density: Density) {
 @Composable
 fun ProfileCard(profile: Profile, cursus: Cursus?, modifier: Modifier = Modifier) {
     val accent = profile.accentColor()
+    var flipped by rememberSaveable { mutableStateOf(false) }
+    val angle by animateFloatAsState(if (flipped) 180f else 0f, tween(550, easing = FlipEasing), label = "flip")
+    CardFrame(
+        modifier
+            .graphicsLayer {
+                rotationY = angle
+                // The default camera is too close for a card this size: the near edge would balloon.
+                cameraDistance = 12f * density
+            }
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                onClickLabel = stringResource(R.string.card_flip_action),
+                role = Role.Button,
+            ) { flipped = !flipped },
+    ) { scale ->
+        // Past 90 degrees the back faces the viewer; its own half turn cancels the mirroring.
+        if (angle <= 90f) {
+            CardFace(accent, scale) { CardFront(profile, cursus, accent, scale) }
+        } else {
+            CardFace(accent, scale, Modifier.graphicsLayer { rotationY = 180f }) { CardBack(cursus, accent, scale) }
+        }
+    }
+}
+
+@Composable
+private fun CardFrame(modifier: Modifier, content: @Composable (CardScale) -> Unit) {
     BoxWithConstraints(modifier.aspectRatio(CARD_RATIO)) {
         val scale = CardScale(maxWidth / 32, LocalDensity.current)
-        val shape = RoundedCornerShape(scale.dp(1.5f))
-        ProvideTextStyle(TextStyle(color = TextMain, lineHeight = 1.3.em)) {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .clip(shape)
-                    .drawWithCache {
-                        val brush = Brush.linearGradient(
-                            0f to lerp(Surface2, accent, 0.14f),
-                            0.45f to Surface1,
-                            1f to CardBottom,
-                            start = Offset.Zero,
-                            end = Offset(size.width * 0.36f, size.height),
-                        )
-                        onDrawBehind { drawRect(brush) }
-                    }
-                    .border(1.dp, Line, shape)
-                    .padding(scale.dp(1.7f)),
-            ) {
-                CardHead(profile, cursus, accent, scale)
-                Portrait(profile, cursus, accent, scale, Modifier.padding(top = scale.dp(1.4f)))
-                Spacer(Modifier.weight(1f))
-                Identity(profile, cursus, accent, scale)
-                Spacer(Modifier.weight(1f))
-                Stats(profile, cursus, scale)
-                Spacer(Modifier.height(scale.dp(1.2f)))
-                LocationTag(profile.location, scale)
+        ProvideTextStyle(TextStyle(color = TextMain, lineHeight = 1.3.em)) { content(scale) }
+    }
+}
+
+@Composable
+private fun CardFace(
+    accent: Color,
+    scale: CardScale,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val shape = RoundedCornerShape(scale.dp(1.5f))
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .clip(shape)
+            .drawWithCache {
+                val brush = Brush.linearGradient(
+                    0f to lerp(Surface2, accent, 0.14f),
+                    0.45f to Surface1,
+                    1f to CardBottom,
+                    start = Offset.Zero,
+                    end = Offset(size.width * 0.36f, size.height),
+                )
+                onDrawBehind { drawRect(brush) }
             }
-        }
+            .border(1.dp, Line, shape)
+            .padding(scale.dp(1.7f)),
+        content = content,
+    )
+}
+
+@Composable
+private fun ColumnScope.CardFront(profile: Profile, cursus: Cursus?, accent: Color, scale: CardScale) {
+    CardHead(profile, cursus, accent, scale)
+    Portrait(profile, cursus, accent, scale, Modifier.padding(top = scale.dp(1.4f)))
+    Spacer(Modifier.weight(1f))
+    Identity(profile, cursus, accent, scale)
+    Spacer(Modifier.weight(1f))
+    Stats(profile, cursus, scale)
+    Spacer(Modifier.height(scale.dp(1.2f)))
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        LocationTag(profile.location, scale)
+        Spacer(Modifier.weight(1f))
+        FlipHint(scale)
     }
 }
 
@@ -149,7 +205,7 @@ private fun CardHead(profile: Profile, cursus: Cursus?, accent: Color, scale: Ca
 }
 
 @Composable
-private fun Tag(text: String, color: Color, scale: CardScale) {
+internal fun Tag(text: String, color: Color, scale: CardScale) {
     Text(
         text = text,
         color = color,
@@ -289,6 +345,17 @@ private fun LocationTag(location: String?, scale: CardScale) {
     }
 }
 
+@Composable
+internal fun FlipHint(scale: CardScale, modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(R.string.card_flip),
+        color = Faint,
+        fontFamily = FontFamily.Monospace,
+        fontSize = scale.sp(0.92f),
+        modifier = modifier,
+    )
+}
+
 private fun Profile.initials(): String =
     displayName.split(' ')
         .filter { it.isNotBlank() }
@@ -301,5 +368,16 @@ private fun Profile.initials(): String =
 private fun ProfileCardPreview() {
     SwiftyTheme {
         ProfileCard(previewProfile, previewProfile.mainCursus, Modifier.padding(16.dp))
+    }
+}
+
+@Preview(widthDp = 360)
+@Composable
+private fun CardBackPreview() {
+    SwiftyTheme {
+        val accent = previewProfile.accentColor()
+        CardFrame(Modifier.padding(16.dp)) { scale ->
+            CardFace(accent, scale) { CardBack(previewProfile.mainCursus, accent, scale) }
+        }
     }
 }

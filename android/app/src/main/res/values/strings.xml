@@ -36,4 +36,9 @@
     <string name="label_points">Points</string>
     <string name="level_block_label">level in %1$s</string>
     <string name="level_block_progress">%1$d%% towards level %2$d</string>
+
+    <string name="card_flip">flip ⟳</string>
+    <string name="card_flip_action">flip the card</string>
+    <string name="skills_title">Skills</string>
+    <string name="skills_empty">No skills</string>
 </resources>

@@ -14,7 +14,6 @@ import java.time.Instant
 import java.time.Month
 import java.time.YearMonth
 
-private const val MAIN_CURSUS_SLUG = "42cursus"
 private const val HIDDEN = "hidden"
 
 fun UserDto.toProfile(coalition: CoalitionDto?): Profile = Profile(
@@ -31,7 +30,7 @@ fun UserDto.toProfile(coalition: CoalitionDto?): Profile = Profile(
     title = selectedTitle(),
     isStaff = staff,
     cursus = cursusUsers
-        .sortedWith(compareByDescending<CursusUserDto> { it.cursus.slug == MAIN_CURSUS_SLUG }.thenByDescending { it.beginAt })
+        .sortedWith(compareByDescending<CursusUserDto> { it.cursus.slug == Cursus.MAIN_SLUG }.thenByDescending { it.beginAt })
         .map { it.toCursus() },
     projects = projectsUsers.map { it.toRecord() }.sortedByDescending { it.markedAt },
     coalition = coalition?.let { Coalition(it.name, it.color, it.imageUrl) },

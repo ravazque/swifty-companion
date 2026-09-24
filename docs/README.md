@@ -2,7 +2,7 @@
 
 An Android app to look up 42 student profiles through the 42 API v2. Type a
 login and the app shows the profile: photo, level, contact details, location,
-wallet and more.
+wallet, skills and more.
 
 Built with Kotlin and Jetpack Compose.
 
@@ -16,11 +16,16 @@ Built with Kotlin and Jetpack Compose.
   full name, login, grade, selected title, level, wallet, correction points and
   the workstation the user is logged in at (or "Offline"). The card keeps its
   proportions on every screen size.
+- Tapping the card flips it to the back, a radar chart of the skills in the
+  selected cursus on the intra's 0-21 scale. For the main cursus it always
+  shows every skill axis, like the intra, with the untouched ones at zero.
 - Cursus selector when the user has more than one cursus (for example the
-  piscine and the main cursus): the card and the level panel follow the
-  selected one.
+  piscine and the main cursus): the card, the level panel and the skills
+  follow the selected one.
 - Level panel with the exact level and the percentage towards the next one.
 - Details: email, phone (or "Hidden"), campus and pool.
+- Skills of the selected cursus, from the highest level down: level with two
+  decimals and percentage of the 0-21 scale, with a progress bar.
 - Refresh from the profile; back to the search with the top bar arrow or the
   system back gesture.
 - One access token reused across requests and app restarts, renewed before it
@@ -120,6 +125,12 @@ renewed. The token itself is never logged.
   card scales as one piece; its text intentionally ignores the system font
   scale to keep the proportions, while the rest of the app follows it. Images
   are loaded with Coil, with an SVG decoder for coalition logos.
+- **Flip**: the card rotates around its vertical axis in a graphics layer; past
+  90 degrees the back is shown with a half turn of its own so it does not read
+  mirrored. The visible side is saved, so it survives rotation and refresh.
+- **Skills radar**: drawn by hand with `drawWithCache` and a `TextMeasurer`.
+  The radius is the largest one that keeps every label inside the card, and
+  labels that would overlap their neighbors are moved apart.
 
 ## Project structure
 
@@ -134,8 +145,8 @@ android/
     data/auth/                                      token storage, renewal, interceptor, authenticator
     data/net/                                       Retrofit interface, JSON models, HTTP client, rate limit
     ui/                                             navigation, theme, search screen
-    ui/profile/                                     profile screen, cursus selector, level panel, details
-    ui/profile/card/                                profile card and level ring
+    ui/profile/                                     profile screen, cursus selector, level panel, details, skills
+    ui/profile/card/                                profile card (front, back, flip), level ring and skills radar
   app/src/test/                                     unit tests and a local fake of the API
 ```
 
@@ -146,5 +157,6 @@ use a local HTTP server that imitates the token and user endpoints, so they go
 through the real OkHttp and Retrofit stack without touching the API. They
 cover token reuse, reuse after a restart, renewal before expiry, renewal and
 replay after a 401, rejected credentials, error mapping (404, 429, 5xx,
-malformed JSON, no connection), JSON to model mapping, cursus selection and
-login validation.
+malformed JSON, no connection), JSON to model mapping, cursus selection, the
+axes of the skills chart, login validation, and restoring the search text and
+the selected cursus after Android kills the app process.

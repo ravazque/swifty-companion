@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.em
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.Cursus
 import com.ravazque.swiftycompanion.model.Profile
+import com.ravazque.swiftycompanion.model.Skill
 import com.ravazque.swiftycompanion.ui.theme.LineSoft
 import com.ravazque.swiftycompanion.ui.theme.Surface1
 import com.ravazque.swiftycompanion.ui.theme.Surface2
@@ -110,6 +112,66 @@ fun DetailsSection(profile: Profile, modifier: Modifier = Modifier) {
             DetailRow(stringResource(R.string.profile_phone), profile.phone ?: stringResource(R.string.profile_hidden))
             DetailRow(stringResource(R.string.profile_campus), profile.campus ?: unavailable)
             DetailRow(stringResource(R.string.profile_pool), profile.pool?.format(locale) ?: unavailable)
+        }
+    }
+}
+
+@Composable
+fun SkillsSection(cursus: Cursus?, accent: Color, modifier: Modifier = Modifier) {
+    val locale = LocalConfiguration.current.locales[0]
+    val skills = cursus?.skills.orEmpty()
+    Section(modifier) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.skills_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                cursus?.let {
+                    Text(it.name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (skills.isEmpty()) {
+                Text(stringResource(R.string.skills_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            skills.forEach { SkillRow(it, accent, locale) }
+        }
+    }
+}
+
+@Composable
+private fun SkillRow(skill: Skill, accent: Color, locale: Locale) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(skill.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Text(
+                text = String.format(locale, "%.2f", skill.level),
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = FontFamily.Monospace,
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            LinearProgressIndicator(
+                progress = { skill.ratio.toFloat() },
+                modifier = Modifier.weight(1f).height(4.dp),
+                color = accent,
+                trackColor = Surface2,
+                strokeCap = StrokeCap.Round,
+                gapSize = 0.dp,
+                drawStopIndicator = {},
+            )
+            Text(
+                text = String.format(locale, "%.2f%%", skill.percent),
+                style = MaterialTheme.typography.bodySmall,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.End,
+                modifier = Modifier.widthIn(min = 64.dp),
+            )
         }
     }
 }

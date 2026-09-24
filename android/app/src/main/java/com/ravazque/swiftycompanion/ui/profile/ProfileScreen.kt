@@ -111,17 +111,19 @@ private fun ProfileBody(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        state.error?.let { error -> item { ErrorPanel(error, onRetry, column) } }
+        // Stable keys keep each item's saved state (like the card's side) when others come and go.
+        state.error?.let { error -> item(key = "error") { ErrorPanel(error, onRetry, column) } }
         if (profile.cursus.size > 1) {
-            item { CursusSelector(profile.cursus, cursus?.id, accent, onSelectCursus, column) }
+            item(key = "cursus") { CursusSelector(profile.cursus, cursus?.id, accent, onSelectCursus, column) }
         }
-        item { ProfileCard(profile, cursus, column) }
-        cursus?.let { item { LevelBlock(it, accent, column) } }
-        item { DetailsSection(profile, column) }
+        item(key = "card") { ProfileCard(profile, cursus, column) }
+        cursus?.let { item(key = "level") { LevelBlock(it, accent, column) } }
+        item(key = "details") { DetailsSection(profile, column) }
+        item(key = "skills") { SkillsSection(cursus, accent, column) }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08090D, heightDp = 1100)
+@Preview(showBackground = true, backgroundColor = 0xFF08090D, heightDp = 1600)
 @Composable
 private fun ProfilePreview() {
     SwiftyTheme {

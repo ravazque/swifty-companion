@@ -38,10 +38,32 @@ data class Cursus(
     private val hundredths: Int get() = (level * 100).roundToInt()
     val levelNumber: Int get() = hundredths / 100
     val levelPercent: Int get() = hundredths % 100
+
+    // The API only lists the skills a user has touched. The main cursus chart always shows all
+    // of its axes, alphabetically like the intra, with the untouched ones at zero.
+    val chartSkills: List<Skill>
+        get() {
+            val levels = skills.associate { it.name to it.level }
+            val names = if (slug == MAIN_SLUG) MAIN_SKILLS + levels.keys else levels.keys
+            return names.toSortedSet().map { Skill(it, levels[it] ?: 0.0) }
+        }
+
+    companion object {
+        const val MAIN_SLUG = "42cursus"
+
+        val MAIN_SKILLS = setOf(
+            "Adaptation & creativity", "Algorithms & AI", "Basics", "Company experience",
+            "DB & Data", "Functional programming", "Graphics", "Group & interpersonal",
+            "Imperative programming", "Network & system administration",
+            "Object-oriented programming", "Organization", "Parallel computing", "Rigor",
+            "Ruby", "Security", "Shell", "Technology integration", "Unix", "Web",
+        )
+    }
 }
 
 data class Skill(val name: String, val level: Double) {
-    val percent: Double get() = (level / MAX_LEVEL * 100).coerceIn(0.0, 100.0)
+    val ratio: Double get() = (level / MAX_LEVEL).coerceIn(0.0, 1.0)
+    val percent: Double get() = ratio * 100
 
     companion object {
         const val MAX_LEVEL = 21.0
