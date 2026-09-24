@@ -1,5 +1,6 @@
 package com.ravazque.swiftycompanion.ui.profile
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.createSavedStateHandle
@@ -26,10 +27,16 @@ data class ProfileUiState(
     val selectedCursusId: Int? = null,
 )
 
-class ProfileViewModel(val login: String, private val repository: UserRepository) : ViewModel() {
+class ProfileViewModel(
+    val login: String,
+    private val savedState: SavedStateHandle,
+    private val repository: UserRepository,
+) : ViewModel() {
     // The search screen already fetched this login; the network is only hit again on refresh
     // or when the process was killed and the in-memory cache is gone.
-    private val _state = MutableStateFlow(ProfileUiState(profile = repository.cached(login)))
+    private val _state = MutableStateFlow(
+        ProfileUiState(profile = repository.cached(login), selectedCursusId = savedState[CURSUS_KEY]),
+    )
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
 
     private var loadJob: Job? = null
@@ -39,6 +46,7 @@ class ProfileViewModel(val login: String, private val repository: UserRepository
     }
 
     fun selectCursus(id: Int) {
+        savedState[CURSUS_KEY] = id
         _state.update { it.copy(selectedCursusId = id) }
     }
 
@@ -56,11 +64,15 @@ class ProfileViewModel(val login: String, private val repository: UserRepository
     }
 
     companion object {
+        private const val CURSUS_KEY = "selectedCursusId"
+
         val Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as SwiftyApp
+                val savedState = createSavedStateHandle()
                 ProfileViewModel(
-                    login = createSavedStateHandle().toRoute<ProfileDestination>().login,
+                    login = savedState.toRoute<ProfileDestination>().login,
+                    savedState = savedState,
                     repository = app.container.repository,
                 )
             }

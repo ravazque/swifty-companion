@@ -1,7 +1,9 @@
 package com.ravazque.swiftycompanion.ui.search
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -25,8 +27,11 @@ data class SearchUiState(
     val error: AppError? = null,
 )
 
-class SearchViewModel(private val repository: UserRepository) : ViewModel() {
-    private val _state = MutableStateFlow(SearchUiState())
+class SearchViewModel(
+    private val savedState: SavedStateHandle,
+    private val repository: UserRepository,
+) : ViewModel() {
+    private val _state = MutableStateFlow(SearchUiState(query = savedState[QUERY_KEY] ?: ""))
     val state: StateFlow<SearchUiState> = _state.asStateFlow()
 
     // One-shot event: a Channel is consumed once, so a rotation does not navigate again.
@@ -36,6 +41,7 @@ class SearchViewModel(private val repository: UserRepository) : ViewModel() {
     private var searchJob: Job? = null
 
     fun onQueryChange(query: String) {
+        savedState[QUERY_KEY] = query
         _state.update { it.copy(query = query, error = null) }
     }
 
@@ -55,9 +61,11 @@ class SearchViewModel(private val repository: UserRepository) : ViewModel() {
     }
 
     companion object {
+        private const val QUERY_KEY = "query"
+
         val Factory = viewModelFactory {
             initializer {
-                SearchViewModel((this[APPLICATION_KEY] as SwiftyApp).container.repository)
+                SearchViewModel(createSavedStateHandle(), (this[APPLICATION_KEY] as SwiftyApp).container.repository)
             }
         }
     }
