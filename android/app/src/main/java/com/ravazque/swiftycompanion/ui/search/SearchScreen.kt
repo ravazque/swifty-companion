@@ -3,6 +3,7 @@ package com.ravazque.swiftycompanion.ui.search
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -20,10 +21,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +58,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.AppError
+import com.ravazque.swiftycompanion.model.Visibility
 import com.ravazque.swiftycompanion.ui.components.ErrorPanel
 import com.ravazque.swiftycompanion.ui.components.LanguageSwitch
 import com.ravazque.swiftycompanion.ui.debug.TokenInspectorButton
@@ -80,6 +85,8 @@ fun SearchScreen(
         state = state,
         onQueryChange = viewModel::onQueryChange,
         onSearch = viewModel::search,
+        onShowStaff = viewModel::showStaff,
+        onShowBlackholed = viewModel::showBlackholed,
     )
 }
 
@@ -88,6 +95,8 @@ fun SearchContent(
     state: SearchUiState,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onShowStaff: (Boolean) -> Unit,
+    onShowBlackholed: (Boolean) -> Unit,
 ) {
     Scaffold(contentWindowInsets = WindowInsets.safeDrawing) { padding ->
         BoxWithConstraints(
@@ -108,7 +117,7 @@ fun SearchContent(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Column(Modifier.widthIn(max = 480.dp).fillMaxWidth()) {
-                    SearchForm(state, onQueryChange, onSearch)
+                    SearchForm(state, onQueryChange, onSearch, onShowStaff, onShowBlackholed)
                 }
             }
             LanguageSwitch(Modifier.align(Alignment.TopStart).padding(8.dp))
@@ -122,6 +131,8 @@ private fun SearchForm(
     state: SearchUiState,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onShowStaff: (Boolean) -> Unit,
+    onShowBlackholed: (Boolean) -> Unit,
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -191,16 +202,56 @@ private fun SearchForm(
         }
     }
 
+    Spacer(Modifier.height(12.dp))
+    VisibilityOptions(state.visibility, onShowStaff, onShowBlackholed)
+
     if (panelError != null) {
         Spacer(Modifier.height(16.dp))
         ErrorPanel(panelError, onRetry = onSearch)
     }
 }
 
+// Staff and blackholed profiles are only shown when their option is on.
+@Composable
+private fun VisibilityOptions(visibility: Visibility, onShowStaff: (Boolean) -> Unit, onShowBlackholed: (Boolean) -> Unit) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.search_also_show),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        OptionChip(stringResource(R.string.card_staff), visibility.staff, onShowStaff)
+        OptionChip(stringResource(R.string.card_blackholed), visibility.blackholed, onShowBlackholed)
+    }
+}
+
+@Composable
+private fun OptionChip(label: String, selected: Boolean, onChange: (Boolean) -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = { onChange(!selected) },
+        label = { Text(label) },
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+            selectedLabelColor = MaterialTheme.colorScheme.primary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.primary,
+        ),
+        leadingIcon = if (selected) {
+            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+        } else {
+            null
+        },
+    )
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFF08090D)
 @Composable
 private fun SearchPreview() {
     SwiftyTheme {
-        SearchContent(SearchUiState(query = "jdoe", error = AppError.NotFound("jdoe")), {}, {})
+        SearchContent(SearchUiState(query = "jdoe", error = AppError.NotFound("jdoe"), visibility = Visibility(staff = true)), {}, {}, {}, {})
     }
 }

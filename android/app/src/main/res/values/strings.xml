@@ -5,6 +5,7 @@
     <string name="language_spanish" translatable="false">Español</string>
 
     <string name="search_subtitle">LOOK UP ACTIVE STUDENT PROFILES</string>
+    <string name="search_also_show">Also show:</string>
     <string name="search_label">Login</string>
     <string name="search_button">Search</string>
     <string name="action_clear">Clear</string>
@@ -15,9 +16,9 @@
     <string name="error_empty_login">Type a login</string>
     <string name="error_invalid_login">A login only has lowercase letters, digits, hyphens and underscores</string>
     <string name="error_not_found">No user with login %1$s</string>
-    <string name="error_hidden_staff">%1$s is staff. Staff profiles are not shown.</string>
+    <string name="error_hidden_staff">%1$s is staff. Turn on Staff below to see staff profiles.</string>
     <string name="error_hidden_pisciner">%1$s has not started the cursus yet. Piscine profiles are not shown.</string>
-    <string name="error_hidden_blackholed">%1$s was absorbed by the black hole. Blackholed profiles are not shown.</string>
+    <string name="error_hidden_blackholed">%1$s was absorbed by the black hole. Turn on Blackholed below to see these profiles.</string>
     <string name="error_network">No connection. Check your network and try again.</string>
     <string name="error_rate_limited">Too many requests. Wait a moment and try again.</string>
     <string name="error_missing_credentials">API credentials are missing. Add them to .env and rebuild.</string>
@@ -38,6 +39,7 @@
 
     <string name="card_level_tag">LV %1$d</string>
     <string name="card_offline">Offline</string>
+    <string name="card_staff">Staff</string>
     <string name="card_alumni">Alumni</string>
     <string name="card_blackholed">Blackholed</string>
     <string name="label_level">Level</string>

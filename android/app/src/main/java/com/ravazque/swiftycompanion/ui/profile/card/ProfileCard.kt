@@ -337,9 +337,10 @@ private fun StatBox(label: String, value: String, scale: CardScale, modifier: Mo
 
 private val ProfileKind.tag: Int?
     get() = when (this) {
+        ProfileKind.STAFF -> R.string.card_staff
         ProfileKind.ALUMNI -> R.string.card_alumni
         ProfileKind.BLACKHOLED -> R.string.card_blackholed
-        ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.PISCINER, ProfileKind.STAFF -> null
+        ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.PISCINER -> null
     }
 
 @Composable

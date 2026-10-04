@@ -6,6 +6,7 @@ import com.ravazque.swiftycompanion.failureOf
 import com.ravazque.swiftycompanion.json
 import com.ravazque.swiftycompanion.model.AppError
 import com.ravazque.swiftycompanion.model.ProfileKind
+import com.ravazque.swiftycompanion.model.Visibility
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -72,11 +73,18 @@ class RepositoryErrorsTest {
     }
 
     @Test
-    fun blackholedProfilesFollowTheSetting() = runTest {
-        intra.userResponse = { _, _ -> json(200, BLACKHOLED_USER) }
+    fun staffAndBlackholedProfilesFollowTheSearchOptions() = runTest {
+        intra.userResponse = { request, _ ->
+            if (request.url.encodedPath.endsWith("/boss")) json(200, STAFF_USER) else json(200, BLACKHOLED_USER)
+        }
 
         assertEquals(AppError.Hidden("gone", ProfileKind.BLACKHOLED), failureOf { intra.repository().fetch("gone") })
-        assertEquals(ProfileKind.BLACKHOLED, intra.repository(showBlackholed = true).fetch("gone").kind)
+        assertEquals(ProfileKind.BLACKHOLED, intra.repository(visibility = Visibility(blackholed = true)).fetch("gone").kind)
+        assertEquals(ProfileKind.STAFF, intra.repository(visibility = Visibility(staff = true)).fetch("boss").kind)
+
+        val both = intra.repository(visibility = Visibility(staff = true, blackholed = true))
+        assertEquals(ProfileKind.STAFF, both.fetch("boss").kind)
+        assertEquals(ProfileKind.BLACKHOLED, both.fetch("gone").kind)
     }
 
     @Test
@@ -107,6 +115,8 @@ class RepositoryErrorsTest {
         assertEquals("jdoe", repository.cached("jdoe")?.login)
     }
 }
+
+private const val STAFF_USER = """{"id": 2, "login": "boss", "staff?": true}"""
 
 private const val BLACKHOLED_USER = """{"id": 4, "login": "gone", "cursus_users": [{"begin_at": "2026-05-18T07:42:00.000Z",
     "end_at": "2026-07-03T22:01:04.781Z", "blackholed_at": "2026-08-05T07:42:00.000Z", "grade": "Cadet",

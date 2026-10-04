@@ -11,10 +11,11 @@ Built with Kotlin and Jetpack Compose.
 - Search by login. Invalid input, unknown logins, missing connection, rate
   limiting and server errors each get their own message, with a retry button
   when retrying can help.
-- Only active students are shown. Staff, people who have not started the main
-  cursus yet and blackholed students get a message under the search field
-  instead of a profile; alumni are shown with an "Alumni" tag (see
-  "Profile kinds").
+- Active students are shown; alumni too, with an "Alumni" tag. People who
+  have not started the main cursus yet get a message under the search field
+  instead of a profile. So do staff and blackholed students, unless the
+  "Also show: Staff / Blackholed" options under the search button are on
+  (they are off by default and kept across restarts). See "Profile kinds".
 - English and Spanish: the EN | ES switch at the top of the search screen
   changes the language inside the app. On Android 13 and newer the choice is
   the same as the app language in the system settings.
@@ -122,7 +123,8 @@ cd android
 ## Usage
 
 1. Type a login and press Search or the keyboard's search key. EN | ES at
-   the top left switches the language.
+   the top left switches the language; the Staff and Blackholed chips under
+   the button also let those profiles through.
 2. The profile opens if the login exists and belongs to an active student or
    an alumnus. The refresh icon reloads it.
 3. Tap the card to see the skills radar on its back. Tap a point or a skill
@@ -139,15 +141,15 @@ app decides from the user and their main cursus (`42cursus`), in this order:
 
 | Kind | Rule | Shown |
 |------|------|-------|
-| Staff | `staff?` is true | No |
+| Staff | `staff?` is true | With the Staff option, tagged "Staff" |
 | Alumni | `alumni?` is true or the main cursus grade is "Alumni" | Yes, with an "Alumni" tag |
 | Not started (pisciner) | no main cursus, or its kickoff (`begin_at`) is still to come | No |
-| Blackholed | the main cursus has ended (`end_at`) or its black hole date (`blackholed_at`) has passed | No (see below) |
+| Blackholed | the main cursus has ended (`end_at`) or its black hole date (`blackholed_at`) has passed | With the Blackholed option, tagged "Blackholed" |
 | Transcender | main cursus grade "Transcender" | Yes |
 | Student | anyone else in the main cursus | Yes |
 
-To show blackholed profiles too, with a "Blackholed" tag, set
-`SHOW_BLACKHOLED = true` in `model/ProfileKind.kt` and rebuild.
+The two options are stored in the app's private preferences and read on every
+search, so they also apply when a profile is refreshed.
 
 Filter Logcat by the tag `SwiftyAuth` to see when the access token is reused
 or renewed. The token itself is never logged.
@@ -264,10 +266,11 @@ through the real OkHttp and Retrofit stack without touching the API. They
 cover token reuse, reuse after a restart, renewal before expiry, renewal and
 replay after a 401, rejected credentials, an unreadable token answer, both
 inspector actions, error mapping (404, 429, 5xx, malformed JSON, no
-connection), hidden profiles (staff, not started, blackholed with both values
-of the setting) without extra requests, the coalition points, JSON to model
+connection), hidden profiles (not started, and staff and blackholed with every
+combination of the search options) without extra requests, the coalition points, JSON to model
 mapping (including project status and order), the profile kind rules, cursus
 selection, the axes of the main and piscine charts, the projects of each
 cursus with their filter and sort orders, login validation, and restoring the
 search text, the selected cursus, project filter and order, and card side
-after Android kills the app process.
+after Android kills the app process, and keeping the search options for the
+next launch.

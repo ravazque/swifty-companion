@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.ravazque.swiftycompanion.SwiftyApp
 import com.ravazque.swiftycompanion.data.UserRepository
 import com.ravazque.swiftycompanion.model.AppError
+import com.ravazque.swiftycompanion.model.Visibility
 import com.ravazque.swiftycompanion.model.normalizeLogin
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -25,13 +26,14 @@ data class SearchUiState(
     val query: String = "",
     val loading: Boolean = false,
     val error: AppError? = null,
+    val visibility: Visibility = Visibility(),
 )
 
 class SearchViewModel(
     private val savedState: SavedStateHandle,
     private val repository: UserRepository,
 ) : ViewModel() {
-    private val _state = MutableStateFlow(SearchUiState(query = savedState[QUERY_KEY] ?: ""))
+    private val _state = MutableStateFlow(SearchUiState(query = savedState[QUERY_KEY] ?: "", visibility = repository.visibility))
     val state: StateFlow<SearchUiState> = _state.asStateFlow()
 
     // One-shot event: a Channel is consumed once, so a rotation does not navigate again.
@@ -43,6 +45,16 @@ class SearchViewModel(
     fun onQueryChange(query: String) {
         savedState[QUERY_KEY] = query
         _state.update { it.copy(query = query, error = null) }
+    }
+
+    fun showStaff(show: Boolean) = changeVisibility { it.copy(staff = show) }
+
+    fun showBlackholed(show: Boolean) = changeVisibility { it.copy(blackholed = show) }
+
+    private fun changeVisibility(change: (Visibility) -> Visibility) {
+        val visibility = change(_state.value.visibility)
+        repository.visibility = visibility
+        _state.update { it.copy(visibility = visibility, error = null) }
     }
 
     fun search() {

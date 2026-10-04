@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="search_subtitle">BUSCA PERFILES DE ESTUDIANTES ACTIVOS</string>
+    <string name="search_also_show">Mostrar también:</string>
     <string name="search_label">Login</string>
     <string name="search_button">Buscar</string>
     <string name="action_clear">Borrar</string>
@@ -11,9 +12,9 @@
     <string name="error_empty_login">Escribe un login</string>
     <string name="error_invalid_login">Un login solo tiene minúsculas, dígitos, guiones y guiones bajos</string>
     <string name="error_not_found">No existe ningún usuario con el login %1$s</string>
-    <string name="error_hidden_staff">%1$s es staff. Los perfiles de staff no se muestran.</string>
+    <string name="error_hidden_staff">%1$s es staff. Activa Staff abajo para ver los perfiles de staff.</string>
     <string name="error_hidden_pisciner">%1$s aún no ha empezado el cursus. Los perfiles de piscina no se muestran.</string>
-    <string name="error_hidden_blackholed">%1$s está en el agujero negro. Los perfiles blackholed no se muestran.</string>
+    <string name="error_hidden_blackholed">%1$s está en el agujero negro. Activa Blackholed abajo para ver estos perfiles.</string>
     <string name="error_network">Sin conexión. Revisa la red e inténtalo de nuevo.</string>
     <string name="error_rate_limited">Demasiadas peticiones. Espera un momento e inténtalo de nuevo.</string>
     <string name="error_missing_credentials">Faltan las credenciales de la API. Añádelas a .env y recompila.</string>
@@ -35,6 +36,7 @@
 
     <string name="card_level_tag">NV %1$d</string>
     <string name="card_offline">Desconectado</string>
+    <string name="card_staff">Staff</string>
     <string name="card_alumni">Alumni</string>
     <string name="card_blackholed">Blackholed</string>
     <string name="label_level">Nivel</string>

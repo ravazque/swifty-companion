@@ -5,7 +5,7 @@ import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.data.net.IntraApi
 import com.ravazque.swiftycompanion.model.AppError
 import com.ravazque.swiftycompanion.model.Profile
-import com.ravazque.swiftycompanion.model.SHOW_BLACKHOLED
+import com.ravazque.swiftycompanion.model.Visibility
 import com.ravazque.swiftycompanion.model.isHidden
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
@@ -17,10 +17,15 @@ import java.util.concurrent.ConcurrentHashMap
 class UserRepository(
     private val api: IntraApi,
     private val tokens: TokenManager,
-    private val showBlackholed: Boolean = SHOW_BLACKHOLED,
+    private val visibilityStore: VisibilityStore,
     private val now: () -> Instant = Instant::now,
 ) {
     private val cache = ConcurrentHashMap<String, Profile>()
+
+    // Which hidden kinds the search shows anyway; kept across app restarts.
+    var visibility: Visibility
+        get() = visibilityStore.load()
+        set(value) = visibilityStore.save(value)
 
     fun cached(login: String): Profile? = cache[login]
 
@@ -29,7 +34,7 @@ class UserRepository(
         try {
             val profile = api.user(login).toProfile(now())
             // Checked before the coalition calls: a hidden profile costs a single request.
-            if (profile.kind.isHidden(showBlackholed)) throw AppError.Hidden(login, profile.kind)
+            if (profile.kind.isHidden(visibility)) throw AppError.Hidden(login, profile.kind)
             val coalition = optional { api.coalitions(login).firstOrNull() }
             val score = coalition?.let { c -> optional { api.coalitionsUsers(login).firstOrNull { it.coalitionId == c.id }?.score } }
             return profile.copy(coalition = coalition?.toCoalition(score)).also { cache[login] = it }

@@ -2,16 +2,16 @@ package com.ravazque.swiftycompanion.model
 
 import java.time.Instant
 
-// Blackholed profiles are hidden. Set to true to show them instead, tagged like alumni.
-const val SHOW_BLACKHOLED = false
-
 enum class ProfileKind { STUDENT, TRANSCENDER, ALUMNI, BLACKHOLED, PISCINER, STAFF }
 
-// The app only shows active students: staff and people who have not started the main cursus
-// are never shown, blackholed ones depend on SHOW_BLACKHOLED.
-fun ProfileKind.isHidden(showBlackholed: Boolean = SHOW_BLACKHOLED): Boolean = when (this) {
-    ProfileKind.STAFF, ProfileKind.PISCINER -> true
-    ProfileKind.BLACKHOLED -> !showBlackholed
+// Kinds the search may also show besides students, transcenders and alumni; both off by default.
+data class Visibility(val staff: Boolean = false, val blackholed: Boolean = false)
+
+// People who have not started the main cursus are never shown.
+fun ProfileKind.isHidden(visibility: Visibility): Boolean = when (this) {
+    ProfileKind.STAFF -> !visibility.staff
+    ProfileKind.BLACKHOLED -> !visibility.blackholed
+    ProfileKind.PISCINER -> true
     ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.ALUMNI -> false
 }
 

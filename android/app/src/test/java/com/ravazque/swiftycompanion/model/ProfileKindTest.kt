@@ -1,8 +1,6 @@
 package com.ravazque.swiftycompanion.model
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
 
@@ -51,17 +49,13 @@ class ProfileKindTest {
     }
 
     @Test
-    fun onlyActiveStudentsAndAlumniAreShownByDefault() {
-        assertFalse(SHOW_BLACKHOLED)
-        val shown = ProfileKind.entries.filterNot { it.isHidden() }
-        assertEquals(listOf(ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.ALUMNI), shown)
-    }
+    fun hiddenKindsFollowTheSearchOptions() {
+        fun shown(visibility: Visibility) = ProfileKind.entries.filterNot { it.isHidden(visibility) }.toSet()
+        val always = setOf(ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.ALUMNI)
 
-    @Test
-    fun blackholedProfilesCanBeShown() {
-        assertTrue(ProfileKind.BLACKHOLED.isHidden(showBlackholed = false))
-        assertFalse(ProfileKind.BLACKHOLED.isHidden(showBlackholed = true))
-        assertTrue(ProfileKind.STAFF.isHidden(showBlackholed = true))
-        assertTrue(ProfileKind.PISCINER.isHidden(showBlackholed = true))
+        assertEquals(always, shown(Visibility()))
+        assertEquals(always + ProfileKind.STAFF, shown(Visibility(staff = true)))
+        assertEquals(always + ProfileKind.BLACKHOLED, shown(Visibility(blackholed = true)))
+        assertEquals(always + ProfileKind.STAFF + ProfileKind.BLACKHOLED, shown(Visibility(staff = true, blackholed = true)))
     }
 }

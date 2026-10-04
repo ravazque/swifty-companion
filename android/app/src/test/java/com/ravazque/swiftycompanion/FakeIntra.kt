@@ -1,11 +1,13 @@
 package com.ravazque.swiftycompanion
 
 import com.ravazque.swiftycompanion.data.UserRepository
+import com.ravazque.swiftycompanion.data.VisibilityStore
 import com.ravazque.swiftycompanion.data.auth.Token
 import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.data.auth.TokenStore
 import com.ravazque.swiftycompanion.data.net.ApiClient
 import com.ravazque.swiftycompanion.model.AppError
+import com.ravazque.swiftycompanion.model.Visibility
 import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -56,14 +58,21 @@ class FakeIntra : Closeable {
         store: TokenStore = MemoryStore(),
         clock: () -> Long = { 0L },
         clientId: String = "id",
-        showBlackholed: Boolean = false,
+        visibility: Visibility = Visibility(),
     ): UserRepository {
         val client = ApiClient(server.url("/").toString(), clientId, "secret", store, clock, sleep = { sleeps += it })
         tokens = client.tokens
-        return UserRepository(client.api, client.tokens, showBlackholed)
+        return UserRepository(client.api, client.tokens, MemoryVisibilityStore(visibility))
     }
 
     override fun close() = server.close()
+}
+
+class MemoryVisibilityStore(var visibility: Visibility = Visibility()) : VisibilityStore {
+    override fun load() = visibility
+    override fun save(visibility: Visibility) {
+        this.visibility = visibility
+    }
 }
 
 class MemoryStore(var token: Token? = null) : TokenStore {

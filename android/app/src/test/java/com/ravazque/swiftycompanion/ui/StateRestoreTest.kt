@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.ravazque.swiftycompanion.FakeIntra
 import com.ravazque.swiftycompanion.model.ProjectSort
 import com.ravazque.swiftycompanion.model.ProjectStatus
+import com.ravazque.swiftycompanion.model.Visibility
 import com.ravazque.swiftycompanion.ui.profile.ProfileViewModel
 import com.ravazque.swiftycompanion.ui.search.SearchViewModel
 import kotlinx.coroutines.test.runTest
@@ -28,6 +29,20 @@ class StateRestoreTest {
         val restored = SearchViewModel(saved.afterProcessDeath(), intra.repository())
 
         assertEquals("jdoe", restored.state.value.query)
+    }
+
+    @Test
+    fun searchOptionsAreKeptForTheNextLaunch() {
+        val repository = intra.repository()
+        SearchViewModel(SavedStateHandle(), repository).apply {
+            showStaff(true)
+            showBlackholed(true)
+            showStaff(false)
+        }
+
+        val restored = SearchViewModel(SavedStateHandle(), repository).state.value
+
+        assertEquals(Visibility(staff = false, blackholed = true), restored.visibility)
     }
 
     @Test
