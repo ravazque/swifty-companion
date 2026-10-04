@@ -1,5 +1,6 @@
 package com.ravazque.swiftycompanion
 
+import com.ravazque.swiftycompanion.data.ProjectViewStore
 import com.ravazque.swiftycompanion.data.UserRepository
 import com.ravazque.swiftycompanion.data.VisibilityStore
 import com.ravazque.swiftycompanion.data.auth.Token
@@ -7,6 +8,8 @@ import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.data.auth.TokenStore
 import com.ravazque.swiftycompanion.data.net.ApiClient
 import com.ravazque.swiftycompanion.model.AppError
+import com.ravazque.swiftycompanion.model.ProfileGroup
+import com.ravazque.swiftycompanion.model.ProjectView
 import com.ravazque.swiftycompanion.model.Visibility
 import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
@@ -30,6 +33,7 @@ class FakeIntra : Closeable {
     var tokenResponse: (Int) -> MockResponse = { n -> json(200, """{"access_token": "t$n", "expires_in": 7200}""") }
     var userResponse: (RecordedRequest, Int) -> MockResponse = { _, _ -> json(200, MINIMAL_USER) }
     var coalitions = "[]"
+    var coalitionsUsers = "[]"
 
     init {
         server.dispatcher = object : Dispatcher() {
@@ -38,6 +42,7 @@ class FakeIntra : Closeable {
                 return when {
                     path == "/oauth/token" -> tokenResponse(tokenRequests.incrementAndGet())
                     path.endsWith("/coalitions") -> json(200, coalitions)
+                    path.endsWith("/coalitions_users") -> json(200, coalitionsUsers)
                     else -> {
                         userAuthHeaders += request.headers["Authorization"]
                         userResponse(request, userAuthHeaders.size)
@@ -70,6 +75,14 @@ class MemoryVisibilityStore(var visibility: Visibility = Visibility()) : Visibil
     override fun load() = visibility
     override fun save(visibility: Visibility) {
         this.visibility = visibility
+    }
+}
+
+class MemoryProjectViewStore : ProjectViewStore {
+    private val views = mutableMapOf<ProfileGroup, ProjectView>()
+    override fun load(group: ProfileGroup) = views[group] ?: ProjectView()
+    override fun save(group: ProfileGroup, view: ProjectView) {
+        views[group] = view
     }
 }
 

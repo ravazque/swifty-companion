@@ -2,6 +2,7 @@ package com.ravazque.swiftycompanion.model
 
 import java.time.Instant
 import java.time.YearMonth
+import java.util.Locale
 import kotlin.math.roundToInt
 
 data class Profile(
@@ -101,6 +102,8 @@ enum class ProjectStatus { PASSED, FAILED, IN_PROGRESS, WAITING_FOR_CORRECTION, 
 
 enum class ProjectSort { DATE, GRADE, NAME }
 
+data class ProjectView(val filter: ProjectStatus? = null, val sort: ProjectSort = ProjectSort.DATE)
+
 data class ProjectRecord(
     val name: String,
     val status: ProjectStatus,
@@ -122,4 +125,9 @@ fun List<ProjectRecord>.orderedBy(sort: ProjectSort): List<ProjectRecord> = when
     ProjectSort.NAME -> sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 }
 
-data class Coalition(val name: String, val color: String?, val imageUrl: String?)
+data class Coalition(val id: Int, val name: String, val color: String?, val imageUrl: String?, val score: Int? = null)
+
+// Up to 999 the number as it is; from 1000 on, thousands with one decimal, cut toward zero
+// (1999 -> 1.9k, -10566 -> -10.5k) and with the decimal separator of the locale.
+fun compactScore(score: Int, locale: Locale): String =
+    if (score in -999..999) score.toString() else String.format(locale, "%.1fk", score / 100 / 10.0)

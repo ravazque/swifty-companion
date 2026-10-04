@@ -4,6 +4,7 @@ import com.ravazque.swiftycompanion.data.auth.TokenException
 import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.data.net.IntraApi
 import com.ravazque.swiftycompanion.model.AppError
+import com.ravazque.swiftycompanion.model.BLOCKED_LOGINS
 import com.ravazque.swiftycompanion.model.Profile
 import com.ravazque.swiftycompanion.model.Visibility
 import com.ravazque.swiftycompanion.model.isHidden
@@ -31,11 +32,15 @@ class UserRepository(
 
     suspend fun fetch(login: String): Profile {
         if (!tokens.hasCredentials) throw AppError.MissingCredentials
+        if (login in BLOCKED_LOGINS) throw AppError.NotFound(login)
         try {
             val profile = api.user(login).toProfile(now())
-            // Checked before the coalition call: a hidden profile costs a single request.
+            // Checked before the coalition calls: a hidden profile costs a single request.
             if (profile.kind.isHidden(visibility)) throw AppError.Hidden(login, profile.kind)
-            val coalition = optional { api.coalitions(login).mainCoalition() }
+            // The score is the user's own in that coalition (it can be negative).
+            val coalition = optional { api.coalitions(login).mainCoalition() }?.let { main ->
+                main.copy(score = optional { api.coalitionsUsers(login).firstOrNull { it.coalitionId == main.id }?.score })
+            }
             return profile.copy(coalition = coalition).also { cache[login] = it }
         } catch (e: CancellationException) {
             throw e

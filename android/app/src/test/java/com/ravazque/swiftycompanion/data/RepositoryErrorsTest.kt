@@ -28,6 +28,13 @@ class RepositoryErrorsTest {
     }
 
     @Test
+    fun blockedLoginIsNotFoundWithoutAnyRequest() = runTest {
+        assertEquals(AppError.NotFound("vir"), failureOf { intra.repository().fetch("vir") })
+        assertEquals(AppError.NotFound("el-fourbo"), failureOf { intra.repository().fetch("el-fourbo") })
+        assertEquals(0, intra.server.requestCount)
+    }
+
+    @Test
     fun rateLimitIsRetriedAfterTheRequestedDelay() = runTest {
         intra.userResponse = { _, n -> if (n == 1) json(429, "{}", "Retry-After" to "2") else json(200, MINIMAL_USER) }
 
@@ -89,18 +96,27 @@ class RepositoryErrorsTest {
     }
 
     @Test
-    fun theMainCursusCoalitionIsAddedToTheProfile() = runTest {
+    fun theMainCursusCoalitionAndItsScoreAreAddedToTheProfile() = runTest {
         intra.coalitions = """[{"id": 555, "name": "Corvus", "slug": "corvus", "color": "#d087ab"},
             {"id": 398, "name": "Ignisaria", "slug": "ignisaria", "color": "#C2301D"}]"""
-        assertEquals(Coalition("Ignisaria", "#C2301D", null), intra.repository().fetch("jdoe").coalition)
+        intra.coalitionsUsers = """[{"coalition_id": 398, "score": -10566}, {"coalition_id": 555, "score": 0}]"""
+        assertEquals(Coalition(398, "Ignisaria", "#C2301D", null, score = -10566), intra.repository().fetch("jdoe").coalition)
     }
 
     @Test
-    fun failedCoalitionCallStillShowsTheProfile() = runTest {
+    fun failedScoreCallKeepsTheCoalition() = runTest {
+        intra.coalitions = """[{"id": 401, "name": "Zefiria", "slug": "zefiria"}]"""
+        intra.coalitionsUsers = "oops"
+        assertEquals(Coalition(401, "Zefiria", null, null, score = null), intra.repository().fetch("jdoe").coalition)
+    }
+
+    @Test
+    fun failedCoalitionCallStillShowsTheProfileWithoutAskingForTheScore() = runTest {
         intra.coalitions = "oops"
         val profile = intra.repository().fetch("jdoe")
         assertEquals("jdoe", profile.login)
         assertEquals(null, profile.coalition)
+        assertEquals(2, intra.server.requestCount - intra.tokenRequests.get())
     }
 
     @Test

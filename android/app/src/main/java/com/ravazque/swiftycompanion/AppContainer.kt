@@ -1,6 +1,7 @@
 package com.ravazque.swiftycompanion
 
 import android.content.Context
+import com.ravazque.swiftycompanion.data.PrefsProjectViewStore
 import com.ravazque.swiftycompanion.data.PrefsVisibilityStore
 import com.ravazque.swiftycompanion.data.UserRepository
 import com.ravazque.swiftycompanion.data.auth.PrefsTokenStore
@@ -15,10 +16,9 @@ class AppContainer(context: Context) {
         store = PrefsTokenStore(context.getSharedPreferences("auth", Context.MODE_PRIVATE)),
     )
 
+    private val settings = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+
     val tokens = client.tokens
-    val repository = UserRepository(
-        api = client.api,
-        tokens = tokens,
-        visibilityStore = PrefsVisibilityStore(context.getSharedPreferences("settings", Context.MODE_PRIVATE)),
-    )
+    val repository = UserRepository(api = client.api, tokens = tokens, visibilityStore = PrefsVisibilityStore(settings))
+    val projectViews = PrefsProjectViewStore(settings)
 }

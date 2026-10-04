@@ -46,5 +46,5 @@ internal val previewProfile = Profile(
         ProjectRecord("ft_printf", ProjectStatus.FAILED, 0, Instant.parse("2024-12-02T10:00:00Z"), listOf(21)),
         ProjectRecord("C Piscine C 00", ProjectStatus.PASSED, 100, Instant.parse("2024-07-05T10:00:00Z"), listOf(9)),
     ),
-    coalition = Coalition("Zefiria", "#E39F0B", null),
+    coalition = Coalition(401, "Zefiria", "#E39F0B", null, score = 41337),
 )
