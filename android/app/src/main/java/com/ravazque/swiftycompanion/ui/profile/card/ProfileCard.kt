@@ -165,11 +165,7 @@ private fun ColumnScope.CardFront(profile: Profile, cursus: Cursus?, accent: Col
     Spacer(Modifier.weight(1f))
     Stats(profile, cursus, scale)
     Spacer(Modifier.height(scale.dp(1.2f)))
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        LocationTag(profile.location, scale)
-        Spacer(Modifier.weight(1f))
-        FlipHint(scale)
-    }
+    FlipHint(scale, Modifier.align(Alignment.End))
 }
 
 // The piscine and profiles without a coalition use the neutral blue; the rest, their coalition's color.
@@ -179,8 +175,9 @@ fun Profile.accentFor(cursus: Cursus?): Color =
 
 @Composable
 private fun CardHead(profile: Profile, cursus: Cursus?, accent: Color, scale: CardScale) {
+    // Fixed height: with or without the coalition logo, nothing below it moves.
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().height(scale.dp(2f)),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(scale.dp(0.6f)),
     ) {
@@ -291,6 +288,7 @@ private fun Identity(profile: Profile, cursus: Cursus?, accent: Color, scale: Ca
                 modifier = Modifier.padding(top = scale.dp(0.6f)),
             )
         }
+        LocationTag(profile.location, scale, Modifier.padding(top = scale.dp(1f)))
     }
 }
 
@@ -344,10 +342,10 @@ private val ProfileKind.tag: Int?
     }
 
 @Composable
-private fun LocationTag(location: String?, scale: CardScale) {
+private fun LocationTag(location: String?, scale: CardScale, modifier: Modifier) {
     val color = if (location != null) Ok else Faint
     Row(
-        modifier = Modifier
+        modifier = modifier
             .border(1.dp, if (location != null) Ok.copy(alpha = 0.45f) else Line, CircleShape)
             .padding(horizontal = scale.dp(0.9f), vertical = scale.dp(0.25f)),
         verticalAlignment = Alignment.CenterVertically,

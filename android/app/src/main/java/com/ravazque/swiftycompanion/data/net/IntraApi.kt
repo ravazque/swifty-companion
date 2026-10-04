@@ -9,7 +9,4 @@ interface IntraApi {
 
     @GET("v2/users/{login}/coalitions")
     suspend fun coalitions(@Path("login") login: String): List<CoalitionDto>
-
-    @GET("v2/users/{login}/coalitions_users")
-    suspend fun coalitionsUsers(@Path("login") login: String): List<CoalitionUserDto>
 }

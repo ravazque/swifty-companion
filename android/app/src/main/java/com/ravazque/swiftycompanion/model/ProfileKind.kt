@@ -1,6 +1,8 @@
 package com.ravazque.swiftycompanion.model
 
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 enum class ProfileKind { STUDENT, TRANSCENDER, ALUMNI, BLACKHOLED, PISCINER, STAFF }
 
@@ -33,3 +35,23 @@ fun profileKind(isStaff: Boolean, isAlumni: Boolean, main: Cursus?, now: Instant
 
 private const val ALUMNI_GRADE = "Alumni"
 private const val TRANSCENDER_GRADE = "Transcender"
+
+sealed interface AlumniDeadline {
+    data object Paused : AlumniDeadline
+    data class Due(val date: LocalDate) : AlumniDeadline
+}
+
+// A transcender has eight months from the last project that gave experience (the latest passed
+// one in the main cursus) to become alumni; an open work experience pauses that count. Null for
+// anyone else or without any passed project.
+fun Profile.alumniDeadline(zone: ZoneId): AlumniDeadline? {
+    val main = cursus.firstOrNull { it.slug == Cursus.MAIN_SLUG }
+    if (kind != ProfileKind.TRANSCENDER || main == null) return null
+    val projects = projectsOf(main)
+    if (projects.any { it.slug in WORK_EXPERIENCE_SLUGS && it.isOpen }) return AlumniDeadline.Paused
+    val lastExperience = projects.filter { it.status == ProjectStatus.PASSED }.mapNotNull { it.markedAt }.maxOrNull() ?: return null
+    return AlumniDeadline.Due(lastExperience.atZone(zone).toLocalDate().plusMonths(ALUMNI_MONTHS))
+}
+
+private val WORK_EXPERIENCE_SLUGS = setOf("work-experience-i", "work-experience-ii")
+private const val ALUMNI_MONTHS = 8L

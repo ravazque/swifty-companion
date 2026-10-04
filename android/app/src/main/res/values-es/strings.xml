@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="search_subtitle">BUSCA PERFILES DE ESTUDIANTES ACTIVOS</string>
-    <string name="search_also_show">Mostrar también:</string>
     <string name="search_label">Login</string>
     <string name="search_button">Buscar</string>
     <string name="action_clear">Borrar</string>
@@ -12,9 +11,9 @@
     <string name="error_empty_login">Escribe un login</string>
     <string name="error_invalid_login">Un login solo tiene minúsculas, dígitos, guiones y guiones bajos</string>
     <string name="error_not_found">No existe ningún usuario con el login %1$s</string>
-    <string name="error_hidden_staff">%1$s es staff. Activa Staff abajo para ver los perfiles de staff.</string>
-    <string name="error_hidden_pisciner">%1$s aún no ha empezado el cursus. Los perfiles de piscina no se muestran.</string>
-    <string name="error_hidden_blackholed">%1$s está en el agujero negro. Activa Blackholed abajo para ver estos perfiles.</string>
+    <string name="error_hidden_staff">%1$s es staff.\nActiva Staff abajo para ver los perfiles de staff.</string>
+    <string name="error_hidden_pisciner">%1$s aún no ha empezado el cursus.\nLos perfiles de piscina no se muestran.</string>
+    <string name="error_hidden_blackholed">%1$s está en el agujero negro.\nActiva Blackholed abajo para ver estos perfiles.</string>
     <string name="error_network">Sin conexión. Revisa la red e inténtalo de nuevo.</string>
     <string name="error_rate_limited">Demasiadas peticiones. Espera un momento e inténtalo de nuevo.</string>
     <string name="error_missing_credentials">Faltan las credenciales de la API. Añádelas a .env y recompila.</string>
@@ -26,9 +25,10 @@
     <string name="profile_pool">Piscina</string>
     <string name="profile_kickoff">Kickoff</string>
     <string name="profile_blackhole">Agujero negro</string>
-    <string name="profile_coalition_points">Puntos de coalición</string>
+    <string name="profile_alumni">Alumni</string>
+    <string name="profile_paused">PAUSADO</string>
     <string name="profile_unavailable">No disponible</string>
-    <plurals name="profile_blackhole_days">
+    <plurals name="profile_days_left">
         <item quantity="one">%1$s · queda %2$d día</item>
         <item quantity="many">%1$s · quedan %2$d días</item>
         <item quantity="other">%1$s · quedan %2$d días</item>
@@ -42,13 +42,13 @@
     <string name="label_level">Nivel</string>
     <string name="label_wallet">Wallet</string>
     <string name="label_points">Puntos</string>
-    <string name="level_in_cursus">nivel en el Cursus</string>
-    <string name="level_in_piscine">nivel en la Piscina</string>
-    <string name="level_block_progress">%1$d%% hacia el nivel %2$d</string>
+    <string name="level_in_cursus">nivel en el %1$s</string>
+    <string name="level_in_piscine">nivel en la %1$s</string>
+    <string name="level_word_cursus">Cursus</string>
+    <string name="level_word_piscine">Piscina</string>
 
     <string name="card_flip">girar ⟳</string>
     <string name="card_flip_action">girar la tarjeta</string>
-    <string name="card_skills_hint">toca una skill para ver su nivel</string>
     <string name="skills_title">Habilidades</string>
     <string name="skills_empty">Sin habilidades</string>
     <string name="radar_value">Nivel %1$s · %2$s %%</string>

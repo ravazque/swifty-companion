@@ -5,6 +5,7 @@ import com.ravazque.swiftycompanion.MINIMAL_USER
 import com.ravazque.swiftycompanion.failureOf
 import com.ravazque.swiftycompanion.json
 import com.ravazque.swiftycompanion.model.AppError
+import com.ravazque.swiftycompanion.model.Coalition
 import com.ravazque.swiftycompanion.model.ProfileKind
 import com.ravazque.swiftycompanion.model.Visibility
 import kotlinx.coroutines.test.runTest
@@ -88,24 +89,17 @@ class RepositoryErrorsTest {
     }
 
     @Test
-    fun coalitionComesWithTheUsersPoints() = runTest {
+    fun coalitionIsAddedToTheProfile() = runTest {
         intra.coalitions = """[{"id": 7, "name": "Zefiria", "color": "#E39F0B"}]"""
-        intra.coalitionScores = """[{"coalition_id": 3, "score": 1}, {"coalition_id": 7, "score": 41087}]"""
-
-        val coalition = intra.repository().fetch("jdoe").coalition
-
-        assertEquals("Zefiria", coalition?.name)
-        assertEquals(41087, coalition?.score)
+        assertEquals(Coalition("Zefiria", "#E39F0B", null), intra.repository().fetch("jdoe").coalition)
     }
 
     @Test
-    fun failedCoalitionCallsStillShowTheProfile() = runTest {
+    fun failedCoalitionCallStillShowsTheProfile() = runTest {
         intra.coalitions = "oops"
-        assertEquals(null, intra.repository().fetch("jdoe").coalition)
-
-        intra.coalitions = """[{"id": 7, "name": "Zefiria"}]"""
-        intra.coalitionScores = "oops"
-        assertEquals(null, intra.repository().fetch("jdoe").coalition?.score)
+        val profile = intra.repository().fetch("jdoe")
+        assertEquals("jdoe", profile.login)
+        assertEquals(null, profile.coalition)
     }
 
     @Test

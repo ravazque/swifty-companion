@@ -217,13 +217,7 @@ private fun VisibilityOptions(visibility: Visibility, onShowStaff: (Boolean) -> 
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = stringResource(R.string.search_also_show),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         OptionChip(stringResource(R.string.card_staff), visibility.staff, onShowStaff)
         OptionChip(stringResource(R.string.card_blackholed), visibility.blackholed, onShowBlackholed)
     }

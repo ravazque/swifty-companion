@@ -33,11 +33,10 @@ class UserRepository(
         if (!tokens.hasCredentials) throw AppError.MissingCredentials
         try {
             val profile = api.user(login).toProfile(now())
-            // Checked before the coalition calls: a hidden profile costs a single request.
+            // Checked before the coalition call: a hidden profile costs a single request.
             if (profile.kind.isHidden(visibility)) throw AppError.Hidden(login, profile.kind)
             val coalition = optional { api.coalitions(login).firstOrNull() }
-            val score = coalition?.let { c -> optional { api.coalitionsUsers(login).firstOrNull { it.coalitionId == c.id }?.score } }
-            return profile.copy(coalition = coalition?.toCoalition(score)).also { cache[login] = it }
+            return profile.copy(coalition = coalition?.toCoalition()).also { cache[login] = it }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

@@ -5,7 +5,6 @@
     <string name="language_spanish" translatable="false">Español</string>
 
     <string name="search_subtitle">LOOK UP ACTIVE STUDENT PROFILES</string>
-    <string name="search_also_show">Also show:</string>
     <string name="search_label">Login</string>
     <string name="search_button">Search</string>
     <string name="action_clear">Clear</string>
@@ -16,9 +15,9 @@
     <string name="error_empty_login">Type a login</string>
     <string name="error_invalid_login">A login only has lowercase letters, digits, hyphens and underscores</string>
     <string name="error_not_found">No user with login %1$s</string>
-    <string name="error_hidden_staff">%1$s is staff. Turn on Staff below to see staff profiles.</string>
-    <string name="error_hidden_pisciner">%1$s has not started the cursus yet. Piscine profiles are not shown.</string>
-    <string name="error_hidden_blackholed">%1$s was absorbed by the black hole. Turn on Blackholed below to see these profiles.</string>
+    <string name="error_hidden_staff">%1$s is staff.\nTurn on Staff below to see staff profiles.</string>
+    <string name="error_hidden_pisciner">%1$s has not started the cursus yet.\nPiscine profiles are not shown.</string>
+    <string name="error_hidden_blackholed">%1$s was absorbed by the black hole.\nTurn on Blackholed below to see these profiles.</string>
     <string name="error_network">No connection. Check your network and try again.</string>
     <string name="error_rate_limited">Too many requests. Wait a moment and try again.</string>
     <string name="error_missing_credentials">API credentials are missing. Add them to .env and rebuild.</string>
@@ -30,9 +29,10 @@
     <string name="profile_pool">Pool</string>
     <string name="profile_kickoff">Kickoff</string>
     <string name="profile_blackhole">Black hole</string>
-    <string name="profile_coalition_points">Coalition points</string>
+    <string name="profile_alumni">Alumni</string>
+    <string name="profile_paused">PAUSED</string>
     <string name="profile_unavailable">Unavailable</string>
-    <plurals name="profile_blackhole_days">
+    <plurals name="profile_days_left">
         <item quantity="one">%1$s · %2$d day left</item>
         <item quantity="other">%1$s · %2$d days left</item>
     </plurals>
@@ -45,13 +45,13 @@
     <string name="label_level">Level</string>
     <string name="label_wallet">Wallet</string>
     <string name="label_points">Points</string>
-    <string name="level_in_cursus">level in the Cursus</string>
-    <string name="level_in_piscine">level in the Piscine</string>
-    <string name="level_block_progress">%1$d%% towards level %2$d</string>
+    <string name="level_in_cursus">level in the %1$s</string>
+    <string name="level_in_piscine">level in the %1$s</string>
+    <string name="level_word_cursus">Cursus</string>
+    <string name="level_word_piscine">Piscine</string>
 
     <string name="card_flip">flip ⟳</string>
     <string name="card_flip_action">flip the card</string>
-    <string name="card_skills_hint">tap a skill for its level</string>
     <string name="skills_title">Skills</string>
     <string name="skills_empty">No skills</string>
     <string name="radar_value">Level %1$s · %2$s%%</string>

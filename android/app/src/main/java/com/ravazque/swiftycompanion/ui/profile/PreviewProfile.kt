@@ -20,7 +20,7 @@ internal val previewProfile = Profile(
     correctionPoints = 5,
     pool = YearMonth.of(2024, 7),
     title = "Mastermind jdoe",
-    kind = ProfileKind.STUDENT,
+    kind = ProfileKind.TRANSCENDER,
     cursus = listOf(
         Cursus(
             21, "42cursus", "42cursus", 7.42, "Cadet",
@@ -42,9 +42,9 @@ internal val previewProfile = Profile(
     projects = listOf(
         ProjectRecord("minishell", ProjectStatus.IN_PROGRESS, null, null, listOf(21)),
         ProjectRecord("Born2beroot", ProjectStatus.WAITING_FOR_CORRECTION, null, null, listOf(21)),
-        ProjectRecord("Libft", ProjectStatus.PASSED, 125, Instant.parse("2025-01-10T10:00:00Z"), listOf(21)),
+        ProjectRecord("Libft", ProjectStatus.PASSED, 125, Instant.parse("2026-09-10T10:00:00Z"), listOf(21)),
         ProjectRecord("ft_printf", ProjectStatus.FAILED, 0, Instant.parse("2024-12-02T10:00:00Z"), listOf(21)),
         ProjectRecord("C Piscine C 00", ProjectStatus.PASSED, 100, Instant.parse("2024-07-05T10:00:00Z"), listOf(9)),
     ),
-    coalition = Coalition("Zefiria", "#E39F0B", null, 41087),
+    coalition = Coalition("Zefiria", "#E39F0B", null),
 )

@@ -107,7 +107,10 @@ data class ProjectRecord(
     val finalMark: Int?,
     val markedAt: Instant?,
     val cursusIds: List<Int>,
-)
+    val slug: String = "",
+) {
+    val isOpen: Boolean get() = status != ProjectStatus.PASSED && status != ProjectStatus.FAILED
+}
 
 fun List<ProjectRecord>.withStatus(status: ProjectStatus?): List<ProjectRecord> =
     if (status == null) this else filter { it.status == status }
@@ -119,4 +122,4 @@ fun List<ProjectRecord>.orderedBy(sort: ProjectSort): List<ProjectRecord> = when
     ProjectSort.NAME -> sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 }
 
-data class Coalition(val name: String, val color: String?, val imageUrl: String?, val score: Int?)
+data class Coalition(val name: String, val color: String?, val imageUrl: String?)

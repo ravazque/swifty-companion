@@ -34,7 +34,7 @@
     }
   ],
   "projects_users": [
-    { "status": "finished", "validated?": true, "final_mark": 125, "marked_at": "2025-01-10T10:00:00.000Z", "cursus_ids": [21], "project": { "id": 1, "name": "Libft" } },
+    { "status": "finished", "validated?": true, "final_mark": 125, "marked_at": "2025-01-10T10:00:00.000Z", "cursus_ids": [21], "project": { "id": 1, "name": "Libft", "slug": "libft" } },
     { "status": "finished", "validated?": false, "final_mark": 0, "marked_at": "2025-02-10T10:00:00.000Z", "cursus_ids": [21], "project": { "id": 2, "name": "Printf" } },
     { "status": "in_progress", "validated?": null, "final_mark": null, "marked_at": null, "cursus_ids": [21], "project": { "id": 3, "name": "Shell" } },
     { "status": "waiting_for_correction", "validated?": true, "final_mark": 100, "marked_at": "2024-12-01T10:00:00.000Z", "cursus_ids": [21], "project": { "id": 4, "name": "Pipex" } },

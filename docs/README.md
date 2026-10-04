@@ -13,17 +13,18 @@ Built with Kotlin and Jetpack Compose.
   when retrying can help.
 - Active students are shown; alumni too, with an "Alumni" tag. People who
   have not started the main cursus yet get a message under the search field
-  instead of a profile. So do staff and blackholed students, unless the
-  "Also show: Staff / Blackholed" options under the search button are on
-  (they are off by default and kept across restarts). See "Profile kinds".
+  instead of a profile. So do staff and blackholed students, unless the Staff
+  or Blackholed chip under the search button is on (both are off by default
+  and kept across restarts). See "Profile kinds".
 - English and Spanish: the EN | ES switch at the top of the search screen
   changes the language inside the app. On Android 13 and newer the choice is
   the same as the app language in the system settings.
 - Profile card: coalition logo and name, level tag, photo inside a ring that
   fills with the progress towards the next level, full name, login, grade,
-  selected title, level, wallet, correction points and the workstation the
-  user is logged in at (or "Offline"). The card keeps its proportions on every
-  screen size.
+  selected title, the workstation the user is logged in at (or "Offline")
+  centered under the name, level, wallet and correction points. The card keeps
+  its proportions on every screen size, and its layout does not move when the
+  cursus or the location changes.
 - Tapping the card flips it to the back, a radar chart of the skills in the
   selected cursus on the intra's 0-21 scale. The main cursus always shows its
   20 skill axes and the piscine its 6, with the untouched ones at zero.
@@ -34,9 +35,11 @@ Built with Kotlin and Jetpack Compose.
   the selected one: card, radar, level panel, details and projects. The
   piscine is shown in a neutral blue, without the coalition; so is a profile
   without a coalition.
-- Level panel with the exact level and the percentage towards the next one.
+- Level panel with the exact level, "level in the Cursus" or "level in the
+  Piscine", and a bar with the progress towards the next level.
 - Details: the pool month and, outside the piscine, the kickoff date, the
-  black hole date with the days left, and the user's coalition points.
+  black hole date with the days left and, for a Transcender, the alumni
+  deadline (see "Alumni deadline").
 - Projects of the selected cursus, including the failed ones. Each one shows
   its mark, its status in color (passed, failed, in progress, waiting for
   correction, searching group, creating group) and the date it was graded. Two
@@ -151,6 +154,15 @@ app decides from the user and their main cursus (`42cursus`), in this order:
 The two options are stored in the app's private preferences and read on every
 search, so they also apply when a profile is refreshed.
 
+### Alumni deadline
+
+A Transcender (not an alumnus) has eight months from the last time they gained
+experience to become alumni. The app takes the date the latest passed project
+of the main cursus was graded, adds eight months and shows that date with the
+days left in the details, as "Alumni". While a "Work Experience I" or "Work
+Experience II" project is open (not passed or failed), the count is paused
+and the row says "PAUSED".
+
 Filter Logcat by the tag `SwiftyAuth` to see when the access token is reused
 or renewed. The token itself is never logged.
 
@@ -221,7 +233,7 @@ does not change after these actions.
   their mark), which is why the grade comes first for them.
 - **Hidden profiles**: the repository classifies the profile right after the
   user request and stops there if it is hidden, so a hidden profile costs one
-  request. Visible ones also fetch the coalition and the user's points in it.
+  request. Visible ones also fetch the coalition.
 - **Language**: on Android 13 and newer the switch sets the app language
   through the system's `LocaleManager`; on older versions the choice is kept
   in preferences and applied when the activity starts. Every language ships
@@ -267,7 +279,8 @@ cover token reuse, reuse after a restart, renewal before expiry, renewal and
 replay after a 401, rejected credentials, an unreadable token answer, both
 inspector actions, error mapping (404, 429, 5xx, malformed JSON, no
 connection), hidden profiles (not started, and staff and blackholed with every
-combination of the search options) without extra requests, the coalition points, JSON to model
+combination of the search options) without extra requests, the coalition, the
+alumni deadline (date, pause by an open work experience, who has one), JSON to model
 mapping (including project status and order), the profile kind rules, cursus
 selection, the axes of the main and piscine charts, the projects of each
 cursus with their filter and sort orders, login validation, and restoring the

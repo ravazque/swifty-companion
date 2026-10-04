@@ -66,6 +66,7 @@ class ProfileMapperTest {
         // An old piscine exam stays "in_progress" with its mark; a finished attempt without one failed.
         assertEquals(ProjectStatus.FAILED, byName["C Piscine Exam 02"])
         assertEquals(ProjectStatus.FAILED, byName["Rush 00"])
+        assertEquals("libft", profile.projects.first { it.name == "Libft" }.slug)
     }
 
     @Test

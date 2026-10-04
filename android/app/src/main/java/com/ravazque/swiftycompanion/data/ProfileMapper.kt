@@ -37,7 +37,7 @@ fun UserDto.toProfile(now: Instant): Profile {
     )
 }
 
-fun CoalitionDto.toCoalition(score: Int?) = Coalition(name, color, imageUrl, score)
+fun CoalitionDto.toCoalition() = Coalition(name, color, imageUrl)
 
 private fun UserDto.pool(): YearMonth? {
     val year = poolYear?.toIntOrNull() ?: return null
@@ -77,6 +77,7 @@ private fun ProjectUserDto.toRecord() = ProjectRecord(
     finalMark = finalMark,
     markedAt = instant(markedAt),
     cursusIds = cursusIds,
+    slug = project.slug,
 )
 
 private fun instant(text: String?): Instant? = text?.let { runCatching { Instant.parse(it) }.getOrNull() }
