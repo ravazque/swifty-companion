@@ -36,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -43,6 +44,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
@@ -106,7 +109,9 @@ fun ProfileContent(
     onBack: () -> Unit,
     actions: ProfileActions,
 ) {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = { Text(login, fontFamily = FontFamily.Monospace) },
@@ -122,6 +127,8 @@ fun ProfileContent(
                     }
                 },
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
+                colors = TopAppBarDefaults.topAppBarColors(scrolledContainerColor = MaterialTheme.colorScheme.background),
+                scrollBehavior = scrollBehavior,
             )
         },
         contentWindowInsets = WindowInsets.safeDrawing,
@@ -129,7 +136,7 @@ fun ProfileContent(
         Box(Modifier.fillMaxSize().padding(padding)) {
             val profile = state.profile
             when {
-                profile != null -> ProfileBody(profile, state, actions)
+                profile != null -> ProfileBody(profile, state, actions, topBarOffset = { scrollBehavior.state.heightOffset })
                 state.error != null -> ErrorPanel(
                     error = state.error,
                     onRetry = actions.onRefresh,
@@ -145,31 +152,35 @@ fun ProfileContent(
 }
 
 @Composable
-private fun ProfileBody(profile: Profile, state: ProfileUiState, actions: ProfileActions) {
+private fun ProfileBody(profile: Profile, state: ProfileUiState, actions: ProfileActions, topBarOffset: () -> Float) {
     val cursus = profile.cursusOrMain(state.selectedCursusId)
     val accent = profile.accentColor()
     // Created outside the layout switch, so each layout keeps its scroll when the window changes size.
     val columnList = rememberLazyListState()
     val sideScroll = rememberScrollState()
     val tabList = rememberLazyListState()
-    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        // Outside the scrolling content, so a failed refresh is visible wherever the lists are.
-        state.error?.let { error ->
-            ErrorPanel(
-                error = error,
-                onRetry = actions.onRefresh,
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp).widthIn(max = CardMaxWidth),
-            )
-        }
-        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-            if (maxWidth >= TwoPaneMinWidth) {
-                // As wide as fits the whole card in the pane's height, but never so narrow its text gets unreadable.
-                val above = if (profile.cursus.size > 1) SelectorHeight + 16.dp else 0.dp
-                val cardHeight = maxHeight - 32.dp - above
-                val sideWidth = min(maxWidth * 0.4f, cardHeight * CARD_RATIO).coerceIn(CardMinWidth, CardMaxWidth)
-                TwoPanes(profile, cursus, accent, state, actions, sideWidth, sideScroll, tabList)
-            } else {
-                OneColumn(profile, cursus, accent, state, actions, columnList)
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // The height with the top bar fully shown (its offset is negative while it scrolls away), so the
+        // card keeps its size while the bar moves. The side pane is as wide as fits the whole card in
+        // that height, but never so narrow that the card's text gets unreadable.
+        val height = maxHeight + with(LocalDensity.current) { topBarOffset().toDp() }
+        val above = if (profile.cursus.size > 1) SelectorHeight + 16.dp else 0.dp
+        val sideWidth = min(maxWidth * 0.4f, (height - 32.dp - above) * CARD_RATIO).coerceIn(CardMinWidth, CardMaxWidth)
+        val twoPanes = maxWidth >= TwoPaneMinWidth
+        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+            state.error?.let { error ->
+                ErrorPanel(
+                    error = error,
+                    onRetry = actions.onRefresh,
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp).widthIn(max = CardMaxWidth),
+                )
+            }
+            Box(Modifier.weight(1f)) {
+                if (twoPanes) {
+                    TwoPanes(profile, cursus, accent, state, actions, sideWidth, sideScroll, tabList)
+                } else {
+                    OneColumn(profile, cursus, accent, state, actions, columnList)
+                }
             }
         }
     }

@@ -36,7 +36,9 @@ Built with Kotlin and Jetpack Compose.
 - Adaptive layout: one scrolling column on phones in portrait; from 600 dp
   wide (tablets, phones in landscape, unfolded foldables) the card, level and
   details sit on the left and the tabs on the right, each pane with its own
-  scroll. Content stays clear of the system bars and display cutouts.
+  scroll. The top bar scrolls away with the content and comes back on the
+  first scroll up, which matters on short screens. Content stays clear of the
+  system bars and display cutouts.
 - The selected cursus, tab and filter, the side of the card and the text typed
   in the search are kept when the screen rotates, when the layout changes and
   when Android closes the app in the background.
@@ -185,8 +187,9 @@ does not change after these actions.
   `BoxWithConstraints`. Below 600 dp it shows one `LazyColumn` whose tabs stay
   pinned at the top; from 600 dp it shows two panes. The left pane is as wide
   as lets the whole card fit in its height, between 300 and 440 dp, so the
-  card's text stays readable on short screens. Both layouts share the same
-  composables.
+  card's text stays readable on short screens. That height is measured as if
+  the top bar were fully shown, so the card keeps its size while the bar
+  scrolls away. Both layouts share the same composables.
 - **Screen state**: the selected cursus, tab, project filter and card side
   live in the profile ViewModel and in its `SavedStateHandle`, which Android
   restores after closing the app in the background. Since they do not live in
