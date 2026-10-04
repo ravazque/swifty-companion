@@ -1,7 +1,6 @@
 package com.ravazque.swiftycompanion.ui.profile
 
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -40,7 +39,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,29 +56,29 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.Cursus
 import com.ravazque.swiftycompanion.model.Profile
+import com.ravazque.swiftycompanion.model.ProjectSort
 import com.ravazque.swiftycompanion.model.ProjectStatus
 import com.ravazque.swiftycompanion.ui.components.ErrorPanel
 import com.ravazque.swiftycompanion.ui.debug.TokenInspectorButton
 import com.ravazque.swiftycompanion.ui.profile.card.CARD_RATIO
 import com.ravazque.swiftycompanion.ui.profile.card.ProfileCard
-import com.ravazque.swiftycompanion.ui.profile.card.accentColor
+import com.ravazque.swiftycompanion.ui.profile.card.accentFor
 import com.ravazque.swiftycompanion.ui.theme.SwiftyTheme
-import kotlinx.coroutines.launch
 
-// Below 600 dp one scrolling column with pinned tabs; from 600 dp (tablets, phones in landscape)
-// the card and details on the left and the tabs on the right, each pane with its own scroll.
+// Below 600 dp one scrolling column; from 600 dp (tablets, phones in landscape) the card and
+// details on the left and the projects on the right, each pane with its own scroll.
 private val TwoPaneMinWidth = 600.dp
 private val CardMinWidth = 300.dp
 private val CardMaxWidth = 440.dp
-private val TabsMaxWidth = 720.dp
+private val ListMaxWidth = 720.dp
 private val SelectorHeight = 48.dp
 
 class ProfileActions(
     val onRefresh: () -> Unit = {},
     val onFlipCard: () -> Unit = {},
     val onSelectCursus: (Int) -> Unit = {},
-    val onSelectTab: (ProfileTab) -> Unit = {},
     val onSelectProjectFilter: (ProjectStatus?) -> Unit = {},
+    val onSelectProjectSort: (ProjectSort) -> Unit = {},
 )
 
 @Composable
@@ -94,8 +92,8 @@ fun ProfileScreen(
             onRefresh = viewModel::load,
             onFlipCard = viewModel::flipCard,
             onSelectCursus = viewModel::selectCursus,
-            onSelectTab = viewModel::selectTab,
             onSelectProjectFilter = viewModel::selectProjectFilter,
+            onSelectProjectSort = viewModel::selectProjectSort,
         )
     }
     ProfileContent(viewModel.login, state, onBack, actions)
@@ -154,11 +152,11 @@ fun ProfileContent(
 @Composable
 private fun ProfileBody(profile: Profile, state: ProfileUiState, actions: ProfileActions, topBarOffset: () -> Float) {
     val cursus = profile.cursusOrMain(state.selectedCursusId)
-    val accent = profile.accentColor()
+    val accent = profile.accentFor(cursus)
     // Created outside the layout switch, so each layout keeps its scroll when the window changes size.
     val columnList = rememberLazyListState()
     val sideScroll = rememberScrollState()
-    val tabList = rememberLazyListState()
+    val projectList = rememberLazyListState()
     BoxWithConstraints(Modifier.fillMaxSize()) {
         // The height with the top bar fully shown (its offset is negative while it scrolls away), so the
         // card keeps its size while the bar moves. The side pane is as wide as fits the whole card in
@@ -177,7 +175,7 @@ private fun ProfileBody(profile: Profile, state: ProfileUiState, actions: Profil
             }
             Box(Modifier.weight(1f)) {
                 if (twoPanes) {
-                    TwoPanes(profile, cursus, accent, state, actions, sideWidth, sideScroll, tabList)
+                    TwoPanes(profile, cursus, accent, state, actions, sideWidth, sideScroll, projectList)
                 } else {
                     OneColumn(profile, cursus, accent, state, actions, columnList)
                 }
@@ -196,15 +194,6 @@ private fun OneColumn(
     listState: LazyListState,
 ) {
     val column = Modifier.widthIn(max = CardMaxWidth).fillMaxWidth()
-    val scope = rememberCoroutineScope()
-    // With the tabs pinned, a new tab starts at its top instead of wherever the old one was.
-    val selectTab: (ProfileTab) -> Unit = { tab ->
-        actions.onSelectTab(tab)
-        val tabs = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == TABS_KEY }
-        if (tabs != null && tabs.index < listState.firstVisibleItemIndex) {
-            scope.launch { listState.scrollToItem(tabs.index) }
-        }
-    }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
@@ -213,12 +202,7 @@ private fun OneColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         item(key = "overview") { Overview(profile, cursus, accent, state, actions, column) }
-        stickyHeader(key = TABS_KEY) {
-            Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background), Alignment.Center) {
-                ProfileTabs(state.tab, accent, selectTab, column)
-            }
-        }
-        tabItems(profile, cursus, accent, state, actions, column)
+        projects(profile, cursus, accent, state, actions, column)
     }
 }
 
@@ -231,13 +215,8 @@ private fun TwoPanes(
     actions: ProfileActions,
     sideWidth: Dp,
     sideScroll: ScrollState,
-    tabList: LazyListState,
+    listState: LazyListState,
 ) {
-    val scope = rememberCoroutineScope()
-    val selectTab: (ProfileTab) -> Unit = { tab ->
-        actions.onSelectTab(tab)
-        scope.launch { tabList.scrollToItem(0) }
-    }
     Row(Modifier.fillMaxSize().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
         Overview(
             profile = profile,
@@ -247,18 +226,14 @@ private fun TwoPanes(
             actions = actions,
             modifier = Modifier.width(sideWidth).fillMaxHeight().verticalScroll(sideScroll).padding(vertical = 16.dp),
         )
-        Column(Modifier.weight(1f).fillMaxHeight().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            val content = Modifier.widthIn(max = TabsMaxWidth).fillMaxWidth()
-            ProfileTabs(state.tab, accent, selectTab, content)
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = tabList,
-                contentPadding = PaddingValues(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                tabItems(profile, cursus, accent, state, actions, content)
-            }
+        LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+            state = listState,
+            contentPadding = PaddingValues(vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            projects(profile, cursus, accent, state, actions, Modifier.widthIn(max = ListMaxWidth).fillMaxWidth())
         }
     }
 }
@@ -276,27 +251,28 @@ private fun Overview(
         if (profile.cursus.size > 1) CursusSelector(profile.cursus, cursus?.id, accent, actions.onSelectCursus)
         ProfileCard(profile, cursus, state.cardFlipped, actions.onFlipCard, Modifier.fillMaxWidth())
         cursus?.let { LevelBlock(it, accent) }
-        DetailsSection(profile)
+        DetailsSection(profile, cursus)
     }
 }
 
-private fun LazyListScope.tabItems(
+private fun LazyListScope.projects(
     profile: Profile,
     cursus: Cursus?,
     accent: Color,
     state: ProfileUiState,
     actions: ProfileActions,
     modifier: Modifier,
-) {
-    when (state.tab) {
-        ProfileTab.SKILLS -> item(key = "skills") { SkillsSection(cursus, accent, modifier) }
-        ProfileTab.PROJECTS -> projectItems(profile, cursus?.id, state.projectFilter, accent, actions.onSelectProjectFilter, modifier)
-    }
-}
+) = projectItems(
+    projects = profile.projectsOf(cursus),
+    filter = state.projectFilter,
+    sort = state.projectSort,
+    accent = accent,
+    onSelectFilter = actions.onSelectProjectFilter,
+    onSelectSort = actions.onSelectProjectSort,
+    modifier = modifier,
+)
 
-private const val TABS_KEY = "tabs"
-
-@Preview(name = "Phone", widthDp = 411, heightDp = 891, showBackground = true, backgroundColor = 0xFF08090D)
+@Preview(name = "Phone", widthDp = 411, heightDp = 1400, showBackground = true, backgroundColor = 0xFF08090D)
 @Preview(name = "Phone, landscape", widthDp = 891, heightDp = 411, showBackground = true, backgroundColor = 0xFF08090D)
 @Preview(name = "Tablet", widthDp = 1280, heightDp = 800, showBackground = true, backgroundColor = 0xFF08090D)
 @Composable
@@ -306,11 +282,10 @@ private fun ProfilePreview() {
     }
 }
 
-@Preview(name = "Projects", widthDp = 411, heightDp = 1600, showBackground = true, backgroundColor = 0xFF08090D)
-@Preview(name = "Projects, tablet", widthDp = 1280, heightDp = 800, showBackground = true, backgroundColor = 0xFF08090D)
+@Preview(name = "Piscine", widthDp = 411, heightDp = 1400, showBackground = true, backgroundColor = 0xFF08090D)
 @Composable
-private fun ProfileProjectsPreview() {
+private fun ProfilePiscinePreview() {
     SwiftyTheme {
-        ProfileContent("jdoe", ProfileUiState(profile = previewProfile, tab = ProfileTab.PROJECTS), {}, ProfileActions())
+        ProfileContent("jdoe", ProfileUiState(profile = previewProfile, selectedCursusId = 9), {}, ProfileActions())
     }
 }

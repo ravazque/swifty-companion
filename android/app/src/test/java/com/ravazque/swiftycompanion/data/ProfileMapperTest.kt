@@ -1,37 +1,41 @@
 package com.ravazque.swiftycompanion.data
 
-import com.ravazque.swiftycompanion.data.net.CoalitionDto
 import com.ravazque.swiftycompanion.data.net.IntraJson
 import com.ravazque.swiftycompanion.data.net.UserDto
+import com.ravazque.swiftycompanion.model.ProfileKind
 import com.ravazque.swiftycompanion.model.ProjectStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Instant
 import java.time.YearMonth
 
 class ProfileMapperTest {
+    private val now = Instant.parse("2026-10-04T00:00:00Z")
     private val fixture = javaClass.classLoader!!.getResource("user.json")!!.readText()
-    private val profile = IntraJson.decodeFromString<UserDto>(fixture).toProfile(CoalitionDto("Blue", "#3F8EFC", null))
+    private val profile = IntraJson.decodeFromString<UserDto>(fixture).toProfile(now)
 
     @Test
     fun mapsIdentityAndDetails() {
         assertEquals("Johnny Doe", profile.displayName)
         assertEquals("https://cdn.example.com/users/medium_jdoe.jpg", profile.imageUrl)
-        assertNull(profile.phone)
         assertEquals("c1r2s3", profile.location)
         assertEquals(YearMonth.of(2024, 7), profile.pool)
-        assertEquals("South", profile.campus)
         assertEquals("Mastermind jdoe", profile.title)
-        assertEquals("Blue", profile.coalition?.name)
+        assertEquals(ProfileKind.TRANSCENDER, profile.kind)
+        assertNull(profile.coalition)
     }
 
     @Test
-    fun mainCursusComesFirst() {
+    fun mainCursusComesFirstWithItsDates() {
         val main = profile.mainCursus!!
         assertEquals("42cursus", main.slug)
         assertEquals(14, main.levelNumber)
         assertEquals(19, main.levelPercent)
+        assertEquals(Instant.parse("2024-10-01T07:00:00Z"), main.beginAt)
+        assertNull(main.endAt)
+        assertEquals(Instant.parse("2030-01-01T07:00:00Z"), main.blackholedAt)
         assertEquals(listOf("42cursus", "c-piscine"), profile.cursus.map { it.slug })
     }
 
@@ -51,21 +55,23 @@ class ProfileMapperTest {
     }
 
     @Test
-    fun projectStatusFollowsTheLatestGrade() {
+    fun openAttemptsKeepTheirStatusAndTheRestFollowTheLatestGrade() {
         val byName = profile.projects.associate { it.name to it.status }
-        assertEquals(ProjectStatus.VALIDATED, byName["Libft"])
+        assertEquals(ProjectStatus.PASSED, byName["Libft"])
         assertEquals(ProjectStatus.FAILED, byName["Printf"])
         assertEquals(ProjectStatus.IN_PROGRESS, byName["Shell"])
-        // Graded attempts count even when the status is still open (a retry, an old piscine exam).
-        assertEquals(ProjectStatus.VALIDATED, byName["Pipex"])
+        assertEquals(ProjectStatus.WAITING_FOR_CORRECTION, byName["Pipex"])
+        assertEquals(ProjectStatus.SEARCHING_GROUP, byName["Team"])
+        assertEquals(ProjectStatus.CREATING_GROUP, byName["Squad"])
+        // An old piscine exam stays "in_progress" with its mark; a finished attempt without one failed.
         assertEquals(ProjectStatus.FAILED, byName["C Piscine Exam 02"])
         assertEquals(ProjectStatus.FAILED, byName["Rush 00"])
     }
 
     @Test
-    fun projectsInProgressComeFirstThenNewestGrade() {
+    fun projectsStartWithUngradedOnesThenNewestGrade() {
         assertEquals(
-            listOf("Shell", "Printf", "Libft", "Pipex", "C Piscine Exam 02", "Rush 00"),
+            listOf("Shell", "Rush 00", "Team", "Squad", "Printf", "Libft", "Pipex", "C Piscine Exam 02"),
             profile.projects.map { it.name },
         )
     }
@@ -73,10 +79,10 @@ class ProfileMapperTest {
     @Test
     fun sparseAccountFallsBackToDefaults() {
         val staff = IntraJson.decodeFromString<UserDto>("""{"id": 2, "login": "boss", "staff?": true, "wallet": null}""")
-            .toProfile(null)
+            .toProfile(now)
 
         assertEquals("boss", staff.displayName)
-        assertTrue(staff.isStaff)
+        assertEquals(ProfileKind.STAFF, staff.kind)
         assertEquals(0, staff.wallet)
         assertNull(staff.mainCursus)
         assertTrue(staff.projects.isEmpty())

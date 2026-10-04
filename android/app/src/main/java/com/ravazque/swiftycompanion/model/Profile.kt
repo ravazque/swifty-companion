@@ -8,15 +8,12 @@ data class Profile(
     val login: String,
     val displayName: String,
     val imageUrl: String?,
-    val email: String?,
-    val phone: String?,
     val location: String?,
     val wallet: Int,
     val correctionPoints: Int,
     val pool: YearMonth?,
-    val campus: String?,
     val title: String?,
-    val isStaff: Boolean,
+    val kind: ProfileKind,
     val cursus: List<Cursus>,
     val projects: List<ProjectRecord>,
     val coalition: Coalition?,
@@ -25,14 +22,14 @@ data class Profile(
 
     fun cursusOrMain(id: Int?): Cursus? = cursus.firstOrNull { it.id == id } ?: mainCursus
 
-    // Each project once, under the first of its cursus in display order (the given cursus, then
-    // the rest as listed); projects of no listed cursus go last, in a group without cursus.
-    fun projectGroups(firstCursusId: Int?, status: ProjectStatus?): List<ProjectGroup> {
-        val order = cursus.sortedByDescending { it.id == firstCursusId }
-        val byCursus = projects
-            .filter { status == null || it.status == status }
-            .groupBy { project -> order.firstOrNull { it.id in project.cursusIds } }
-        return (order + null).mapNotNull { cursus -> byCursus[cursus]?.let { ProjectGroup(cursus, it) } }
+    // The projects of one cursus. Projects of none of the user's cursus are listed with the main
+    // one, so every project can be reached from some cursus.
+    fun projectsOf(selected: Cursus?): List<ProjectRecord> {
+        if (selected == null) return projects
+        val ids = cursus.map { it.id }.toSet()
+        return projects.filter { project ->
+            selected.id in project.cursusIds || (selected == mainCursus && project.cursusIds.none { it in ids })
+        }
     }
 }
 
@@ -43,23 +40,38 @@ data class Cursus(
     val level: Double,
     val grade: String?,
     val skills: List<Skill>,
+    val beginAt: Instant? = null,
+    val endAt: Instant? = null,
+    val blackholedAt: Instant? = null,
 ) {
     // Levels come with two decimals; working in hundredths avoids 14.19 - 14 = 0.18999...
     private val hundredths: Int get() = (level * 100).roundToInt()
     val levelNumber: Int get() = hundredths / 100
     val levelPercent: Int get() = hundredths % 100
 
-    // The API only lists the skills a user has touched. The main cursus chart always shows all
-    // of its axes, alphabetically like the intra, with the untouched ones at zero.
+    val isPiscine: Boolean get() = slug == PISCINE_SLUG
+
+    // The API only lists the skills a user has touched. The main cursus and the piscine charts
+    // always show all of their axes, with the untouched ones at zero: the main cursus
+    // alphabetically, the piscine in the intra's order.
     val chartSkills: List<Skill>
         get() {
             val levels = skills.associate { it.name to it.level }
-            val names = if (slug == MAIN_SLUG) MAIN_SKILLS + levels.keys else levels.keys
-            return names.toSortedSet().map { Skill(it, levels[it] ?: 0.0) }
+            val names = when (slug) {
+                MAIN_SLUG -> (MAIN_SKILLS + levels.keys).sorted()
+                PISCINE_SLUG -> PISCINE_SKILLS + (levels.keys - PISCINE_SKILLS.toSet()).sorted()
+                else -> levels.keys.sorted()
+            }
+            return names.map { Skill(it, levels[it] ?: 0.0) }
         }
+
+    // The piscine chart is a hexagon with flat top and bottom: its first axis sits half a step
+    // before the top, at the upper left.
+    val chartStartsHalfStepBefore: Boolean get() = slug == PISCINE_SLUG
 
     companion object {
         const val MAIN_SLUG = "42cursus"
+        const val PISCINE_SLUG = "c-piscine"
 
         val MAIN_SKILLS = setOf(
             "Adaptation & creativity", "Algorithms & AI", "Basics", "Company experience",
@@ -67,6 +79,11 @@ data class Cursus(
             "Imperative programming", "Network & system administration",
             "Object-oriented programming", "Organization", "Parallel computing", "Rigor",
             "Ruby", "Security", "Shell", "Technology integration", "Unix", "Web",
+        )
+
+        val PISCINE_SKILLS = listOf(
+            "Unix", "Adaptation & creativity", "Algorithms & AI", "Group & interpersonal",
+            "Imperative programming", "Rigor",
         )
     }
 }
@@ -80,7 +97,9 @@ data class Skill(val name: String, val level: Double) {
     }
 }
 
-enum class ProjectStatus { VALIDATED, FAILED, IN_PROGRESS }
+enum class ProjectStatus { PASSED, FAILED, IN_PROGRESS, WAITING_FOR_CORRECTION, SEARCHING_GROUP, CREATING_GROUP }
+
+enum class ProjectSort { DATE, GRADE, NAME }
 
 data class ProjectRecord(
     val name: String,
@@ -90,6 +109,14 @@ data class ProjectRecord(
     val cursusIds: List<Int>,
 )
 
-data class ProjectGroup(val cursus: Cursus?, val projects: List<ProjectRecord>)
+fun List<ProjectRecord>.withStatus(status: ProjectStatus?): List<ProjectRecord> =
+    if (status == null) this else filter { it.status == status }
 
-data class Coalition(val name: String, val color: String?, val imageUrl: String?)
+// Date: ungraded attempts first, then the newest grade. Grade: highest mark first. Name: A to Z.
+fun List<ProjectRecord>.orderedBy(sort: ProjectSort): List<ProjectRecord> = when (sort) {
+    ProjectSort.DATE -> sortedWith(compareBy<ProjectRecord> { it.markedAt != null }.thenByDescending { it.markedAt })
+    ProjectSort.GRADE -> sortedWith(compareBy<ProjectRecord> { it.finalMark == null }.thenByDescending { it.finalMark })
+    ProjectSort.NAME -> sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+}
+
+data class Coalition(val name: String, val color: String?, val imageUrl: String?, val score: Int?)

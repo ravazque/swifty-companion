@@ -12,6 +12,7 @@ import com.ravazque.swiftycompanion.SwiftyApp
 import com.ravazque.swiftycompanion.data.UserRepository
 import com.ravazque.swiftycompanion.model.AppError
 import com.ravazque.swiftycompanion.model.Profile
+import com.ravazque.swiftycompanion.model.ProjectSort
 import com.ravazque.swiftycompanion.model.ProjectStatus
 import com.ravazque.swiftycompanion.ui.ProfileDestination
 import kotlinx.coroutines.Job
@@ -21,15 +22,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class ProfileTab { SKILLS, PROJECTS }
-
 data class ProfileUiState(
     val profile: Profile? = null,
     val loading: Boolean = false,
     val error: AppError? = null,
     val selectedCursusId: Int? = null,
-    val tab: ProfileTab = ProfileTab.SKILLS,
     val projectFilter: ProjectStatus? = null,
+    val projectSort: ProjectSort = ProjectSort.DATE,
     val cardFlipped: Boolean = false,
 )
 
@@ -44,8 +43,8 @@ class ProfileViewModel(
         ProfileUiState(
             profile = repository.cached(login),
             selectedCursusId = savedState[CURSUS_KEY],
-            tab = ProfileTab.entries.firstOrNull { it.name == savedState.get<String>(TAB_KEY) } ?: ProfileTab.SKILLS,
             projectFilter = ProjectStatus.entries.firstOrNull { it.name == savedState.get<String>(FILTER_KEY) },
+            projectSort = ProjectSort.entries.firstOrNull { it.name == savedState.get<String>(SORT_KEY) } ?: ProjectSort.DATE,
             cardFlipped = savedState[FLIPPED_KEY] ?: false,
         ),
     )
@@ -62,14 +61,14 @@ class ProfileViewModel(
         _state.update { it.copy(selectedCursusId = id) }
     }
 
-    fun selectTab(tab: ProfileTab) {
-        savedState[TAB_KEY] = tab.name
-        _state.update { it.copy(tab = tab) }
-    }
-
     fun selectProjectFilter(status: ProjectStatus?) {
         savedState[FILTER_KEY] = status?.name
         _state.update { it.copy(projectFilter = status) }
+    }
+
+    fun selectProjectSort(sort: ProjectSort) {
+        savedState[SORT_KEY] = sort.name
+        _state.update { it.copy(projectSort = sort) }
     }
 
     fun flipCard() {
@@ -93,8 +92,8 @@ class ProfileViewModel(
 
     companion object {
         private const val CURSUS_KEY = "selectedCursusId"
-        private const val TAB_KEY = "tab"
         private const val FILTER_KEY = "projectFilter"
+        private const val SORT_KEY = "projectSort"
         private const val FLIPPED_KEY = "cardFlipped"
 
         val Factory = viewModelFactory {

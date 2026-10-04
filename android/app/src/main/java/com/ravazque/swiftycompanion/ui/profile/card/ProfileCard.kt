@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,9 +58,10 @@ import coil3.compose.AsyncImage
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.Cursus
 import com.ravazque.swiftycompanion.model.Profile
+import com.ravazque.swiftycompanion.model.ProfileKind
 import com.ravazque.swiftycompanion.ui.profile.previewProfile
 import com.ravazque.swiftycompanion.ui.theme.CardBottom
-import com.ravazque.swiftycompanion.ui.theme.DefaultAccent
+import com.ravazque.swiftycompanion.ui.theme.Blue
 import com.ravazque.swiftycompanion.ui.theme.Faint
 import com.ravazque.swiftycompanion.ui.theme.Line
 import com.ravazque.swiftycompanion.ui.theme.LineSoft
@@ -92,7 +94,7 @@ fun ProfileCard(
     onFlip: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val accent = profile.accentColor()
+    val accent = profile.accentFor(cursus)
     val angle by animateFloatAsState(if (flipped) 180f else 0f, tween(550, easing = FlipEasing), label = "flip")
     CardFrame(
         modifier
@@ -170,8 +172,10 @@ private fun ColumnScope.CardFront(profile: Profile, cursus: Cursus?, accent: Col
     }
 }
 
-fun Profile.accentColor(): Color =
-    coalition?.color?.let { runCatching { Color(it.toColorInt()) }.getOrNull() } ?: DefaultAccent
+// The piscine and profiles without a coalition use the neutral blue; the rest, their coalition's color.
+fun Profile.accentFor(cursus: Cursus?): Color =
+    coalition?.takeUnless { cursus?.isPiscine == true }?.color
+        ?.let { runCatching { Color(it.toColorInt()) }.getOrNull() } ?: Blue
 
 @Composable
 private fun CardHead(profile: Profile, cursus: Cursus?, accent: Color, scale: CardScale) {
@@ -185,7 +189,7 @@ private fun CardHead(profile: Profile, cursus: Cursus?, accent: Color, scale: Ca
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(scale.dp(0.6f)),
         ) {
-            profile.coalition?.let { coalition ->
+            profile.coalition?.takeUnless { cursus?.isPiscine == true }?.let { coalition ->
                 AsyncImage(
                     model = coalition.imageUrl,
                     contentDescription = null,
@@ -202,7 +206,7 @@ private fun CardHead(profile: Profile, cursus: Cursus?, accent: Color, scale: Ca
                 )
             }
         }
-        if (profile.isStaff) Tag(stringResource(R.string.profile_staff), accent, scale)
+        profile.kind.tag?.let { Tag(stringResource(it), accent, scale) }
         cursus?.let { Tag(stringResource(R.string.card_level_tag, it.levelNumber), Faint, scale) }
     }
 }
@@ -300,13 +304,13 @@ private fun Stats(profile: Profile, cursus: Cursus?, scale: CardScale) {
             scale = scale,
             modifier = Modifier.weight(1f),
         )
-        StatBox(stringResource(R.string.label_wallet), "${profile.wallet} ₳", scale, Modifier.weight(1f))
+        StatBox(stringResource(R.string.label_wallet), profile.wallet.toString(), scale, Modifier.weight(1f), currency = true)
         StatBox(stringResource(R.string.label_points), profile.correctionPoints.toString(), scale, Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun StatBox(label: String, value: String, scale: CardScale, modifier: Modifier) {
+private fun StatBox(label: String, value: String, scale: CardScale, modifier: Modifier, currency: Boolean = false) {
     val shape = RoundedCornerShape(scale.dp(0.75f))
     Column(
         modifier = modifier
@@ -324,9 +328,19 @@ private fun StatBox(label: String, value: String, scale: CardScale, modifier: Mo
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(value, fontFamily = FontFamily.Monospace, fontSize = scale.sp(1.17f), maxLines = 1)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(scale.dp(0.3f))) {
+            Text(value, fontFamily = FontFamily.Monospace, fontSize = scale.sp(1.17f), maxLines = 1)
+            if (currency) Icon(AltarianSign, contentDescription = null, tint = TextMain, modifier = Modifier.size(scale.dp(1f)))
+        }
     }
 }
+
+private val ProfileKind.tag: Int?
+    get() = when (this) {
+        ProfileKind.ALUMNI -> R.string.card_alumni
+        ProfileKind.BLACKHOLED -> R.string.card_blackholed
+        ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.PISCINER, ProfileKind.STAFF -> null
+    }
 
 @Composable
 private fun LocationTag(location: String?, scale: CardScale) {
@@ -378,7 +392,7 @@ private fun ProfileCardPreview() {
 @Composable
 private fun CardBackPreview() {
     SwiftyTheme {
-        val accent = previewProfile.accentColor()
+        val accent = previewProfile.accentFor(previewProfile.mainCursus)
         CardFrame(Modifier.padding(16.dp)) { scale ->
             CardFace(accent, scale) { CardBack(previewProfile.mainCursus, accent, scale) }
         }

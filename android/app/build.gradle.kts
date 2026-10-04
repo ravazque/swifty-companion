@@ -52,6 +52,13 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
+
+    // The language is switched inside the app, so every language ships in the base APK.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
 }
 
 dependencies {

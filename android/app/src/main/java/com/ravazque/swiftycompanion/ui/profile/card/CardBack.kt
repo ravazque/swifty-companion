@@ -3,6 +3,7 @@ package com.ravazque.swiftycompanion.ui.profile.card
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -41,7 +42,21 @@ internal fun ColumnScope.CardBack(cursus: Cursus?, accent: Color, scale: CardSca
             Text(stringResource(R.string.skills_empty), color = Faint, fontSize = scale.sp(1.05f))
         }
     } else {
-        SkillRadar(skills, accent, scale, body)
+        SkillRadar(skills, cursus?.chartStartsHalfStepBefore == true, accent, scale, body)
     }
-    FlipHint(scale, Modifier.align(Alignment.End))
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        if (skills.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.card_skills_hint),
+                color = Faint,
+                fontSize = scale.sp(0.92f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
+        FlipHint(scale)
+    }
 }

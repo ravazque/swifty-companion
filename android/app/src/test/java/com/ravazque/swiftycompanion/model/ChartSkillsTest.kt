@@ -1,6 +1,8 @@
 package com.ravazque.swiftycompanion.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ChartSkillsTest {
@@ -18,11 +20,22 @@ class ChartSkillsTest {
     }
 
     @Test
+    fun piscineShowsItsSixAxesInTheIntrasOrder() {
+        val chart = cursus(Cursus.PISCINE_SLUG, Skill("Rigor", 3.0), Skill("Unix", 5.0), Skill("Extra", 1.0))
+
+        assertEquals(Cursus.PISCINE_SKILLS + "Extra", chart.chartSkills.map { it.name })
+        assertEquals(5.0, chart.chartSkills.first().level, 0.0)
+        assertEquals(0.0, chart.chartSkills.first { it.name == "Algorithms & AI" }.level, 0.0)
+        assertTrue(chart.chartStartsHalfStepBefore)
+        assertFalse(cursus(Cursus.MAIN_SLUG).chartStartsHalfStepBefore)
+    }
+
+    @Test
     fun otherCursusOnlyShowsItsOwnSkills() {
-        val chart = cursus("c-piscine", Skill("Unix", 5.0), Skill("Rigor", 3.0)).chartSkills
+        val chart = cursus("c-piscine-reloaded", Skill("Unix", 5.0), Skill("Rigor", 3.0)).chartSkills
 
         assertEquals(listOf("Rigor", "Unix"), chart.map { it.name })
-        assertEquals(emptyList<Skill>(), cursus("c-piscine").chartSkills)
+        assertEquals(emptyList<Skill>(), cursus("c-piscine-reloaded").chartSkills)
     }
 
     @Test

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="search_subtitle">Busca el perfil de un estudiante</string>
+    <string name="search_subtitle">BUSCA PERFILES DE ESTUDIANTES ACTIVOS</string>
     <string name="search_label">Login</string>
     <string name="search_button">Buscar</string>
     <string name="action_clear">Borrar</string>
@@ -11,6 +11,9 @@
     <string name="error_empty_login">Escribe un login</string>
     <string name="error_invalid_login">Un login solo tiene minúsculas, dígitos, guiones y guiones bajos</string>
     <string name="error_not_found">No existe ningún usuario con el login %1$s</string>
+    <string name="error_hidden_staff">%1$s es staff. Los perfiles de staff no se muestran.</string>
+    <string name="error_hidden_pisciner">%1$s aún no ha empezado el cursus. Los perfiles de piscina no se muestran.</string>
+    <string name="error_hidden_blackholed">%1$s está en el agujero negro. Los perfiles blackholed no se muestran.</string>
     <string name="error_network">Sin conexión. Revisa la red e inténtalo de nuevo.</string>
     <string name="error_rate_limited">Demasiadas peticiones. Espera un momento e inténtalo de nuevo.</string>
     <string name="error_missing_credentials">Faltan las credenciales de la API. Añádelas a .env y recompila.</string>
@@ -19,38 +22,56 @@
     <string name="error_server">El servidor ha devuelto un error (%1$d). Inténtalo más tarde.</string>
     <string name="error_unexpected">Respuesta inesperada del servidor.</string>
 
-    <string name="profile_staff">Staff</string>
-    <string name="profile_email">Email</string>
-    <string name="profile_phone">Teléfono</string>
-    <string name="profile_campus">Campus</string>
     <string name="profile_pool">Piscina</string>
-    <string name="profile_hidden">Oculto</string>
+    <string name="profile_kickoff">Kickoff</string>
+    <string name="profile_blackhole">Agujero negro</string>
+    <string name="profile_coalition_points">Puntos de coalición</string>
     <string name="profile_unavailable">No disponible</string>
+    <plurals name="profile_blackhole_days">
+        <item quantity="one">%1$s · queda %2$d día</item>
+        <item quantity="many">%1$s · quedan %2$d días</item>
+        <item quantity="other">%1$s · quedan %2$d días</item>
+    </plurals>
 
     <string name="card_level_tag">NV %1$d</string>
     <string name="card_offline">Desconectado</string>
+    <string name="card_alumni">Alumni</string>
+    <string name="card_blackholed">Blackholed</string>
     <string name="label_level">Nivel</string>
     <string name="label_wallet">Wallet</string>
     <string name="label_points">Puntos</string>
-    <string name="level_block_label">nivel en %1$s</string>
+    <string name="level_in_cursus">nivel en el Cursus</string>
+    <string name="level_in_piscine">nivel en la Piscina</string>
     <string name="level_block_progress">%1$d%% hacia el nivel %2$d</string>
 
     <string name="card_flip">girar ⟳</string>
     <string name="card_flip_action">girar la tarjeta</string>
+    <string name="card_skills_hint">toca una skill para ver su nivel</string>
     <string name="skills_title">Habilidades</string>
     <string name="skills_empty">Sin habilidades</string>
+    <string name="radar_value">Nivel %1$s · %2$s %%</string>
 
     <string name="projects_title">Proyectos</string>
-    <string name="projects_other">Otros</string>
     <string name="projects_empty">Sin proyectos</string>
     <string name="projects_empty_filter">Ningún proyecto con este estado</string>
+    <string name="projects_status">Estado</string>
+    <string name="projects_sort">Ordenar por</string>
+    <string name="sort_date">Fecha</string>
+    <string name="sort_grade">Nota</string>
+    <string name="sort_name">Nombre</string>
     <string name="filter_all">Todos</string>
-    <string name="filter_validated">Validados</string>
+    <string name="filter_passed">Aprobados</string>
     <string name="filter_failed">Fallidos</string>
     <string name="filter_in_progress">En curso</string>
-    <string name="status_validated">Validado</string>
+    <string name="filter_waiting_for_correction">Esperando corrección</string>
+    <string name="filter_searching_group">Buscando grupo</string>
+    <string name="filter_creating_group">Creando grupo</string>
+    <string name="status_passed">Aprobado</string>
     <string name="status_failed">Fallido</string>
     <string name="status_in_progress">En curso</string>
+    <string name="status_waiting_for_correction">Esperando corrección</string>
+    <string name="status_searching_group">Buscando grupo</string>
+    <string name="status_creating_group">Creando grupo</string>
 
     <string name="inspector_title">Token de acceso</string>
     <string name="inspector_token">Token</string>

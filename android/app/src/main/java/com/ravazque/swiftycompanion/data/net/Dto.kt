@@ -16,8 +16,6 @@ internal val IntraJson = Json {
 data class UserDto(
     val id: Long,
     val login: String,
-    val email: String? = null,
-    val phone: String? = null,
     val displayname: String? = null,
     @SerialName("usual_full_name") val usualFullName: String? = null,
     val image: ImageDto? = null,
@@ -27,10 +25,9 @@ data class UserDto(
     @SerialName("pool_month") val poolMonth: String? = null,
     @SerialName("pool_year") val poolYear: String? = null,
     @SerialName("staff?") val staff: Boolean = false,
+    @SerialName("alumni?") val alumni: Boolean = false,
     @SerialName("cursus_users") val cursusUsers: List<CursusUserDto> = emptyList(),
     @SerialName("projects_users") val projectsUsers: List<ProjectUserDto> = emptyList(),
-    val campus: List<CampusDto> = emptyList(),
-    @SerialName("campus_users") val campusUsers: List<CampusUserDto> = emptyList(),
     val titles: List<TitleDto> = emptyList(),
     @SerialName("titles_users") val titlesUsers: List<TitleUserDto> = emptyList(),
 )
@@ -46,6 +43,8 @@ data class CursusUserDto(
     val level: Double = 0.0,
     val grade: String? = null,
     @SerialName("begin_at") val beginAt: String? = null,
+    @SerialName("end_at") val endAt: String? = null,
+    @SerialName("blackholed_at") val blackholedAt: String? = null,
     val cursus: CursusDto,
     val skills: List<SkillDto> = emptyList(),
 )
@@ -70,15 +69,6 @@ data class ProjectUserDto(
 data class ProjectDto(val name: String)
 
 @Serializable
-data class CampusDto(val id: Int, val name: String)
-
-@Serializable
-data class CampusUserDto(
-    @SerialName("campus_id") val campusId: Int,
-    @SerialName("is_primary") val isPrimary: Boolean = false,
-)
-
-@Serializable
 data class TitleDto(val id: Int, val name: String)
 
 @Serializable
@@ -86,7 +76,11 @@ data class TitleUserDto(@SerialName("title_id") val titleId: Int, val selected: 
 
 @Serializable
 data class CoalitionDto(
+    val id: Int = 0,
     val name: String,
     val color: String? = null,
     @SerialName("image_url") val imageUrl: String? = null,
 )
+
+@Serializable
+data class CoalitionUserDto(@SerialName("coalition_id") val coalitionId: Int, val score: Int = 0)

@@ -15,6 +15,7 @@
   "pool_month": "july",
   "pool_year": "2024",
   "staff?": false,
+  "alumni?": false,
   "field_the_app_does_not_know": { "nested": [1, 2, 3] },
   "cursus_users": [
     {
@@ -24,6 +25,7 @@
     },
     {
       "level": 14.19, "grade": "Transcender", "begin_at": "2024-10-01T07:00:00.000Z",
+      "end_at": null, "blackholed_at": "2030-01-01T07:00:00.000Z",
       "cursus": { "id": 21, "name": "42cursus", "slug": "42cursus" },
       "skills": [
         { "id": 3, "name": "Imperative programming", "level": 10.5 },
@@ -37,7 +39,9 @@
     { "status": "in_progress", "validated?": null, "final_mark": null, "marked_at": null, "cursus_ids": [21], "project": { "id": 3, "name": "Shell" } },
     { "status": "waiting_for_correction", "validated?": true, "final_mark": 100, "marked_at": "2024-12-01T10:00:00.000Z", "cursus_ids": [21], "project": { "id": 4, "name": "Pipex" } },
     { "status": "in_progress", "validated?": false, "final_mark": 0, "marked_at": "2024-07-19T14:00:00.000Z", "cursus_ids": [9], "project": { "id": 5, "name": "C Piscine Exam 02" } },
-    { "status": "finished", "validated?": null, "final_mark": null, "marked_at": null, "cursus_ids": [21], "project": { "id": 6, "name": "Rush 00" } }
+    { "status": "finished", "validated?": null, "final_mark": null, "marked_at": null, "cursus_ids": [21], "project": { "id": 6, "name": "Rush 00" } },
+    { "status": "searching_a_group", "validated?": null, "final_mark": null, "marked_at": null, "cursus_ids": [21], "project": { "id": 7, "name": "Team" } },
+    { "status": "creating_group", "validated?": null, "final_mark": null, "marked_at": null, "cursus_ids": [21], "project": { "id": 8, "name": "Squad" } }
   ],
   "campus": [ { "id": 1, "name": "North" }, { "id": 2, "name": "South" } ],
   "campus_users": [ { "campus_id": 1, "is_primary": false }, { "campus_id": 2, "is_primary": true } ],

@@ -5,9 +5,11 @@ import com.ravazque.swiftycompanion.MINIMAL_USER
 import com.ravazque.swiftycompanion.failureOf
 import com.ravazque.swiftycompanion.json
 import com.ravazque.swiftycompanion.model.AppError
+import com.ravazque.swiftycompanion.model.ProfileKind
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -58,9 +60,54 @@ class RepositoryErrorsTest {
     }
 
     @Test
+    fun staffAndPiscinersAreHiddenWithoutAskingForTheirCoalition() = runTest {
+        intra.userResponse = { _, _ -> json(200, """{"id": 2, "login": "boss", "staff?": true}""") }
+        assertEquals(AppError.Hidden("boss", ProfileKind.STAFF), failureOf { intra.repository().fetch("boss") })
+
+        intra.userResponse = { _, _ -> json(200, """{"id": 3, "login": "newbie"}""") }
+        val repository = intra.repository()
+        assertEquals(AppError.Hidden("newbie", ProfileKind.PISCINER), failureOf { repository.fetch("newbie") })
+        assertNull(repository.cached("newbie"))
+        assertEquals(2, intra.server.requestCount - intra.tokenRequests.get())
+    }
+
+    @Test
+    fun blackholedProfilesFollowTheSetting() = runTest {
+        intra.userResponse = { _, _ -> json(200, BLACKHOLED_USER) }
+
+        assertEquals(AppError.Hidden("gone", ProfileKind.BLACKHOLED), failureOf { intra.repository().fetch("gone") })
+        assertEquals(ProfileKind.BLACKHOLED, intra.repository(showBlackholed = true).fetch("gone").kind)
+    }
+
+    @Test
+    fun coalitionComesWithTheUsersPoints() = runTest {
+        intra.coalitions = """[{"id": 7, "name": "Zefiria", "color": "#E39F0B"}]"""
+        intra.coalitionScores = """[{"coalition_id": 3, "score": 1}, {"coalition_id": 7, "score": 41087}]"""
+
+        val coalition = intra.repository().fetch("jdoe").coalition
+
+        assertEquals("Zefiria", coalition?.name)
+        assertEquals(41087, coalition?.score)
+    }
+
+    @Test
+    fun failedCoalitionCallsStillShowTheProfile() = runTest {
+        intra.coalitions = "oops"
+        assertEquals(null, intra.repository().fetch("jdoe").coalition)
+
+        intra.coalitions = """[{"id": 7, "name": "Zefiria"}]"""
+        intra.coalitionScores = "oops"
+        assertEquals(null, intra.repository().fetch("jdoe").coalition?.score)
+    }
+
+    @Test
     fun successfulFetchIsCached() = runTest {
         val repository = intra.repository()
         repository.fetch("jdoe")
         assertEquals("jdoe", repository.cached("jdoe")?.login)
     }
 }
+
+private const val BLACKHOLED_USER = """{"id": 4, "login": "gone", "cursus_users": [{"begin_at": "2026-05-18T07:42:00.000Z",
+    "end_at": "2026-07-03T22:01:04.781Z", "blackholed_at": "2026-08-05T07:42:00.000Z", "grade": "Cadet",
+    "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""

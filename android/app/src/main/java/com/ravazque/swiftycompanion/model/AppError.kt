@@ -4,6 +4,7 @@ sealed class AppError : Exception() {
     data object EmptyLogin : AppError()
     data object InvalidLogin : AppError()
     data class NotFound(val login: String) : AppError()
+    data class Hidden(val login: String, val kind: ProfileKind) : AppError()
     data object Network : AppError()
     data object RateLimited : AppError()
     data object MissingCredentials : AppError()

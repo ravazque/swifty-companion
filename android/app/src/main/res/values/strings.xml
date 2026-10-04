@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">Swifty Companion</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_spanish" translatable="false">Español</string>
 
-    <string name="search_subtitle">Look up a student profile</string>
+    <string name="search_subtitle">LOOK UP ACTIVE STUDENT PROFILES</string>
     <string name="search_label">Login</string>
     <string name="search_button">Search</string>
     <string name="action_clear">Clear</string>
@@ -13,6 +15,9 @@
     <string name="error_empty_login">Type a login</string>
     <string name="error_invalid_login">A login only has lowercase letters, digits, hyphens and underscores</string>
     <string name="error_not_found">No user with login %1$s</string>
+    <string name="error_hidden_staff">%1$s is staff. Staff profiles are not shown.</string>
+    <string name="error_hidden_pisciner">%1$s has not started the cursus yet. Piscine profiles are not shown.</string>
+    <string name="error_hidden_blackholed">%1$s was absorbed by the black hole. Blackholed profiles are not shown.</string>
     <string name="error_network">No connection. Check your network and try again.</string>
     <string name="error_rate_limited">Too many requests. Wait a moment and try again.</string>
     <string name="error_missing_credentials">API credentials are missing. Add them to .env and rebuild.</string>
@@ -21,38 +26,55 @@
     <string name="error_server">The server returned an error (%1$d). Try again later.</string>
     <string name="error_unexpected">Unexpected answer from the server.</string>
 
-    <string name="profile_staff">Staff</string>
-    <string name="profile_email">Email</string>
-    <string name="profile_phone">Phone</string>
-    <string name="profile_campus">Campus</string>
     <string name="profile_pool">Pool</string>
-    <string name="profile_hidden">Hidden</string>
+    <string name="profile_kickoff">Kickoff</string>
+    <string name="profile_blackhole">Black hole</string>
+    <string name="profile_coalition_points">Coalition points</string>
     <string name="profile_unavailable">Unavailable</string>
+    <plurals name="profile_blackhole_days">
+        <item quantity="one">%1$s · %2$d day left</item>
+        <item quantity="other">%1$s · %2$d days left</item>
+    </plurals>
 
     <string name="card_level_tag">LV %1$d</string>
     <string name="card_offline">Offline</string>
+    <string name="card_alumni">Alumni</string>
+    <string name="card_blackholed">Blackholed</string>
     <string name="label_level">Level</string>
     <string name="label_wallet">Wallet</string>
     <string name="label_points">Points</string>
-    <string name="level_block_label">level in %1$s</string>
+    <string name="level_in_cursus">level in the Cursus</string>
+    <string name="level_in_piscine">level in the Piscine</string>
     <string name="level_block_progress">%1$d%% towards level %2$d</string>
 
     <string name="card_flip">flip ⟳</string>
     <string name="card_flip_action">flip the card</string>
+    <string name="card_skills_hint">tap a skill for its level</string>
     <string name="skills_title">Skills</string>
     <string name="skills_empty">No skills</string>
+    <string name="radar_value">Level %1$s · %2$s%%</string>
 
     <string name="projects_title">Projects</string>
-    <string name="projects_other">Other</string>
     <string name="projects_empty">No projects</string>
     <string name="projects_empty_filter">No projects with this status</string>
+    <string name="projects_status">Status</string>
+    <string name="projects_sort">Sort by</string>
+    <string name="sort_date">Date</string>
+    <string name="sort_grade">Grade</string>
+    <string name="sort_name">Name</string>
     <string name="filter_all">All</string>
-    <string name="filter_validated">Validated</string>
+    <string name="filter_passed">Passed</string>
     <string name="filter_failed">Failed</string>
     <string name="filter_in_progress">In progress</string>
-    <string name="status_validated">Validated</string>
+    <string name="filter_waiting_for_correction">Waiting for correction</string>
+    <string name="filter_searching_group">Searching group</string>
+    <string name="filter_creating_group">Creating group</string>
+    <string name="status_passed">Passed</string>
     <string name="status_failed">Failed</string>
     <string name="status_in_progress">In progress</string>
+    <string name="status_waiting_for_correction">Waiting for correction</string>
+    <string name="status_searching_group">Searching group</string>
+    <string name="status_creating_group">Creating group</string>
 
     <string name="inspector_title">Access token</string>
     <string name="inspector_token">Token</string>

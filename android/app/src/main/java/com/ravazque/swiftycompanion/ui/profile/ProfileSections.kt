@@ -8,39 +8,40 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.Cursus
 import com.ravazque.swiftycompanion.model.Profile
-import com.ravazque.swiftycompanion.model.Skill
 import com.ravazque.swiftycompanion.ui.theme.LineSoft
 import com.ravazque.swiftycompanion.ui.theme.Surface1
 import com.ravazque.swiftycompanion.ui.theme.Surface2
+import java.text.NumberFormat
+import java.time.Instant
+import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 @Composable
@@ -57,50 +58,14 @@ fun CursusSelector(
                 selected = item.id == selectedId,
                 onClick = { onSelect(item.id) },
                 label = { Text(item.name) },
-                colors = accentChipColors(accent),
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = accent.copy(alpha = 0.18f),
+                    selectedLabelColor = accent,
+                ),
             )
         }
     }
 }
-
-@Composable
-internal fun accentChipColors(accent: Color) = FilterChipDefaults.filterChipColors(
-    selectedContainerColor = accent.copy(alpha = 0.18f),
-    selectedLabelColor = accent,
-)
-
-@Composable
-fun ProfileTabs(selected: ProfileTab, accent: Color, onSelect: (ProfileTab) -> Unit, modifier: Modifier = Modifier) {
-    PrimaryTabRow(
-        selectedTabIndex = selected.ordinal,
-        modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.background,
-        indicator = {
-            TabRowDefaults.PrimaryIndicator(
-                modifier = Modifier.tabIndicatorOffset(selected.ordinal, matchContentSize = true),
-                width = Dp.Unspecified,
-                color = accent,
-            )
-        },
-        divider = { HorizontalDivider(color = LineSoft) },
-    ) {
-        ProfileTab.entries.forEach { tab ->
-            Tab(
-                selected = tab == selected,
-                onClick = { onSelect(tab) },
-                text = { Text(stringResource(tab.title)) },
-                selectedContentColor = accent,
-                unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-private val ProfileTab.title: Int
-    get() = when (this) {
-        ProfileTab.SKILLS -> R.string.skills_title
-        ProfileTab.PROJECTS -> R.string.projects_title
-    }
 
 @Composable
 fun LevelBlock(cursus: Cursus, accent: Color, modifier: Modifier = Modifier) {
@@ -116,7 +81,7 @@ fun LevelBlock(cursus: Cursus, accent: Color, modifier: Modifier = Modifier) {
                     modifier = Modifier.alignByBaseline(),
                 )
                 Text(
-                    text = stringResource(R.string.level_block_label, cursus.name),
+                    text = stringResource(if (cursus.isPiscine) R.string.level_in_piscine else R.string.level_in_cursus),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.alignByBaseline(),
                 )
@@ -139,70 +104,34 @@ fun LevelBlock(cursus: Cursus, accent: Color, modifier: Modifier = Modifier) {
     }
 }
 
+// The pool always; for a cursus other than the piscine, also its kickoff, its black hole and the
+// coalition points.
 @Composable
-fun DetailsSection(profile: Profile, modifier: Modifier = Modifier) {
+fun DetailsSection(profile: Profile, cursus: Cursus?, modifier: Modifier = Modifier) {
     val locale = LocalConfiguration.current.locales[0]
-    val unavailable = stringResource(R.string.profile_unavailable)
+    val dates = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     Section(modifier) {
         Column(Modifier.padding(vertical = 4.dp)) {
-            DetailRow(stringResource(R.string.profile_email), profile.email ?: unavailable)
-            DetailRow(stringResource(R.string.profile_phone), profile.phone ?: stringResource(R.string.profile_hidden))
-            DetailRow(stringResource(R.string.profile_campus), profile.campus ?: unavailable)
-            DetailRow(stringResource(R.string.profile_pool), profile.pool?.format(locale) ?: unavailable)
-        }
-    }
-}
-
-@Composable
-fun SkillsSection(cursus: Cursus?, accent: Color, modifier: Modifier = Modifier) {
-    val locale = LocalConfiguration.current.locales[0]
-    val skills = cursus?.skills.orEmpty()
-    Section(modifier) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            cursus?.let { SectionHeader(it.name, skills.size) }
-            if (skills.isEmpty()) {
-                Text(stringResource(R.string.skills_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            DetailRow(stringResource(R.string.profile_pool), profile.pool?.format(locale) ?: stringResource(R.string.profile_unavailable))
+            if (cursus != null && !cursus.isPiscine) {
+                cursus.beginAt?.let { DetailRow(stringResource(R.string.profile_kickoff), it.localDate().format(dates)) }
+                cursus.blackholedAt?.let { DetailRow(stringResource(R.string.profile_blackhole), blackhole(it.localDate(), dates)) }
+                profile.coalition?.score?.let {
+                    DetailRow(stringResource(R.string.profile_coalition_points), NumberFormat.getIntegerInstance(locale).format(it))
+                }
             }
-            skills.forEach { SkillRow(it, accent, locale) }
         }
     }
 }
 
 @Composable
-private fun SkillRow(skill: Skill, accent: Color, locale: Locale) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(skill.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            Text(
-                text = String.format(locale, "%.2f", skill.level),
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            LinearProgressIndicator(
-                progress = { skill.ratio.toFloat() },
-                modifier = Modifier.weight(1f).height(4.dp),
-                color = accent,
-                trackColor = Surface2,
-                strokeCap = StrokeCap.Round,
-                gapSize = 0.dp,
-                drawStopIndicator = {},
-            )
-            Text(
-                text = String.format(locale, "%.2f%%", skill.percent),
-                style = MaterialTheme.typography.bodySmall,
-                fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.End,
-                modifier = Modifier.widthIn(min = 64.dp),
-            )
-        }
-    }
+private fun blackhole(date: LocalDate, dates: DateTimeFormatter): String {
+    val days = ChronoUnit.DAYS.between(LocalDate.now(), date).toInt()
+    if (days < 0) return date.format(dates)
+    return pluralStringResource(R.plurals.profile_blackhole_days, days, date.format(dates), days)
 }
+
+private fun Instant.localDate(): LocalDate = atZone(ZoneId.systemDefault()).toLocalDate()
 
 @Composable
 internal fun SectionHeader(title: String, count: Int) {

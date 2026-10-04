@@ -41,10 +41,12 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.AppError
 import com.ravazque.swiftycompanion.ui.components.ErrorPanel
+import com.ravazque.swiftycompanion.ui.components.LanguageSwitch
 import com.ravazque.swiftycompanion.ui.debug.TokenInspectorButton
 import com.ravazque.swiftycompanion.ui.components.isInputError
 import com.ravazque.swiftycompanion.ui.components.message
@@ -108,6 +111,7 @@ fun SearchContent(
                     SearchForm(state, onQueryChange, onSearch)
                 }
             }
+            LanguageSwitch(Modifier.align(Alignment.TopStart).padding(8.dp))
             TokenInspectorButton(Modifier.align(Alignment.TopEnd).padding(8.dp))
         }
     }
@@ -133,11 +137,17 @@ private fun SearchForm(
         text = stringResource(R.string.app_name),
         style = MaterialTheme.typography.headlineMedium,
         fontWeight = FontWeight.SemiBold,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(),
     )
+    Spacer(Modifier.height(6.dp))
     Text(
         text = stringResource(R.string.search_subtitle),
-        style = MaterialTheme.typography.bodyLarge,
+        style = MaterialTheme.typography.labelLarge,
+        letterSpacing = 0.12.em,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(),
     )
     Spacer(Modifier.height(28.dp))
 

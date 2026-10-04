@@ -1,8 +1,8 @@
 # Swifty Companion
 
-An Android app to look up 42 student profiles through the 42 API v2. Type a
-login and the app shows the profile: photo, level, contact details, location,
-wallet, skills, projects and more.
+An Android app to look up the profiles of active 42 students through the 42
+API v2. Type a login and the app shows the profile: photo, level, location,
+wallet, correction points, skills, projects and more.
 
 Built with Kotlin and Jetpack Compose.
 
@@ -11,37 +11,45 @@ Built with Kotlin and Jetpack Compose.
 - Search by login. Invalid input, unknown logins, missing connection, rate
   limiting and server errors each get their own message, with a retry button
   when retrying can help.
-- Profile card in the coalition's color: coalition logo and name, level tag,
-  photo inside a ring that fills with the progress towards the next level,
-  full name, login, grade, selected title, level, wallet, correction points and
-  the workstation the user is logged in at (or "Offline"). The card keeps its
-  proportions on every screen size.
+- Only active students are shown. Staff, people who have not started the main
+  cursus yet and blackholed students get a message under the search field
+  instead of a profile; alumni are shown with an "Alumni" tag (see
+  "Profile kinds").
+- English and Spanish: the EN | ES switch at the top of the search screen
+  changes the language inside the app. On Android 13 and newer the choice is
+  the same as the app language in the system settings.
+- Profile card: coalition logo and name, level tag, photo inside a ring that
+  fills with the progress towards the next level, full name, login, grade,
+  selected title, level, wallet, correction points and the workstation the
+  user is logged in at (or "Offline"). The card keeps its proportions on every
+  screen size.
 - Tapping the card flips it to the back, a radar chart of the skills in the
-  selected cursus on the intra's 0-21 scale. For the main cursus it always
-  shows every skill axis, like the intra, with the untouched ones at zero.
-- Cursus selector when the user has more than one cursus (for example the
-  piscine and the main cursus): the card, the level panel and the skills
-  follow the selected one.
+  selected cursus on the intra's 0-21 scale. The main cursus always shows its
+  20 skill axes and the piscine its 6, with the untouched ones at zero.
+  Tapping a point or a skill name opens a bubble with the skill's level and
+  percentage; tapping elsewhere closes it, and a second tap flips the card
+  back.
+- Cursus selector when the user has more than one cursus. Everything follows
+  the selected one: card, radar, level panel, details and projects. The
+  piscine is shown in a neutral blue, without the coalition; so is a profile
+  without a coalition.
 - Level panel with the exact level and the percentage towards the next one.
-- Details: email, phone (or "Hidden"), campus and pool.
-- Skills and Projects tabs, pinned to the top while the list scrolls.
-- Skills tab: the skills of the selected cursus, from the highest level down:
-  level with two decimals and percentage of the 0-21 scale, with a progress
-  bar.
-- Projects tab: every project of the user, including the failed ones, grouped
-  by cursus with the selected cursus first. Each project shows its mark, its
-  status (validated, failed or in progress, in color) and the date it was
-  graded. Filter chips show how many projects have each status and narrow the
-  list down to one of them.
+- Details: the pool month and, outside the piscine, the kickoff date, the
+  black hole date with the days left, and the user's coalition points.
+- Projects of the selected cursus, including the failed ones. Each one shows
+  its mark, its status in color (passed, failed, in progress, waiting for
+  correction, searching group, creating group) and the date it was graded. Two
+  menus filter by status, with how many projects have each one, and sort by
+  date, grade or name.
 - Adaptive layout: one scrolling column on phones in portrait; from 600 dp
   wide (tablets, phones in landscape, unfolded foldables) the card, level and
-  details sit on the left and the tabs on the right, each pane with its own
-  scroll. The top bar scrolls away with the content and comes back on the
+  details sit on the left and the projects on the right, each pane with its
+  own scroll. The top bar scrolls away with the content and comes back on the
   first scroll up, which matters on short screens. Content stays clear of the
   system bars and display cutouts.
-- The selected cursus, tab and filter, the side of the card and the text typed
-  in the search are kept when the screen rotates, when the layout changes and
-  when Android closes the app in the background.
+- The selected cursus, project filter and order, the side of the card and the
+  text typed in the search are kept when the screen rotates, when the layout
+  changes and when Android closes the app in the background.
 - Refresh from the profile; back to the search with the top bar arrow or the
   system back gesture.
 - One access token reused across requests and app restarts, renewed before it
@@ -50,7 +58,6 @@ Built with Kotlin and Jetpack Compose.
   fingerprint, time left, how many API requests and token requests the app has
   made, the last renewal and its cause, and two buttons that expire or corrupt
   the stored token to exercise both renewal paths.
-- English and Spanish, following the system language.
 
 ## Repository layout
 
@@ -114,13 +121,33 @@ cd android
 
 ## Usage
 
-1. Type a login and press Search or the keyboard's search key.
-2. The profile opens if the login exists. The refresh icon reloads it.
-3. Tap the card to see the skills radar on its back; tap again to turn it
-   over. The chips above the card choose the cursus.
-4. Scroll down to the Skills and Projects tabs (on wide screens they are on
-   the right). In Projects, the chips at the top filter by status.
+1. Type a login and press Search or the keyboard's search key. EN | ES at
+   the top left switches the language.
+2. The profile opens if the login exists and belongs to an active student or
+   an alumnus. The refresh icon reloads it.
+3. Tap the card to see the skills radar on its back. Tap a point or a skill
+   name to see its level and percentage; tap elsewhere to close it, and again
+   to turn the card over. The chips above the card choose the cursus.
+4. Scroll down to the projects (on wide screens they are on the right). The
+   Status menu filters them and Sort by orders them.
 5. Go back with the arrow in the top bar or the system back gesture.
+
+### Profile kinds
+
+The API has no single field that says whether someone is a student, so the
+app decides from the user and their main cursus (`42cursus`), in this order:
+
+| Kind | Rule | Shown |
+|------|------|-------|
+| Staff | `staff?` is true | No |
+| Alumni | `alumni?` is true or the main cursus grade is "Alumni" | Yes, with an "Alumni" tag |
+| Not started (pisciner) | no main cursus, or its kickoff (`begin_at`) is still to come | No |
+| Blackholed | the main cursus has ended (`end_at`) or its black hole date (`blackholed_at`) has passed | No (see below) |
+| Transcender | main cursus grade "Transcender" | Yes |
+| Student | anyone else in the main cursus | Yes |
+
+To show blackholed profiles too, with a "Blackholed" tag, set
+`SHOW_BLACKHOLED = true` in `model/ProfileKind.kt` and rebuild.
 
 Filter Logcat by the tag `SwiftyAuth` to see when the access token is reused
 or renewed. The token itself is never logged.
@@ -175,22 +202,37 @@ does not change after these actions.
 - **Flip**: the card rotates around its vertical axis in a graphics layer; past
   90 degrees the back is shown with a half turn of its own so it does not read
   mirrored. The visible side is saved, so it survives rotation and refresh.
-- **Skills radar**: drawn by hand with `drawWithCache` and a `TextMeasurer`.
-  The radius is the largest one that keeps every label inside the card, and
-  labels that would overlap their neighbors are moved apart.
-- **Project status**: the latest grade decides. A project with a validated
-  grade is validated; with a failed grade, or finished without validation, it
-  is failed; without a grade it is in progress. This matters because some
-  attempts keep an open status after being graded (piscine exams stay
-  "in_progress" with their mark).
+- **Skills radar**: drawn by hand on a `Canvas` with a `TextMeasurer`. The
+  radius is the largest one that keeps every label inside the card, and labels
+  that would overlap their neighbors are moved apart. The same geometry
+  answers taps: a tap on a name, or close to a point, selects that skill and
+  the bubble is placed above the point (below if there is no room), always
+  inside the chart. The piscine chart is a hexagon with Unix at the upper left
+  and the other skills clockwise.
+- **Wallet sign**: the ₳ is drawn as a vector, since many phone fonts have no
+  glyph for it.
+- **Project status**: an attempt that is waiting for correction, searching a
+  group or creating a group keeps that status. Otherwise the latest grade
+  decides: validated is passed; a failed grade, or finished without
+  validation, is failed; without a grade it is in progress. Some attempts keep
+  an open status after being graded (piscine exams stay "in_progress" with
+  their mark), which is why the grade comes first for them.
+- **Hidden profiles**: the repository classifies the profile right after the
+  user request and stops there if it is hidden, so a hidden profile costs one
+  request. Visible ones also fetch the coalition and the user's points in it.
+- **Language**: on Android 13 and newer the switch sets the app language
+  through the system's `LocaleManager`; on older versions the choice is kept
+  in preferences and applied when the activity starts. Every language ships
+  in the base APK (language splits are off), since the app changes it at
+  runtime.
 - **Layout**: `ProfileScreen` measures the space it gets with
-  `BoxWithConstraints`. Below 600 dp it shows one `LazyColumn` whose tabs stay
-  pinned at the top; from 600 dp it shows two panes. The left pane is as wide
-  as it can be while the whole card still fits in its height, kept between 300
-  and 440 dp so the card's text stays readable on short screens. That height is measured as if
-  the top bar were fully shown, so the card keeps its size while the bar
-  scrolls away. Both layouts share the same composables.
-- **Screen state**: the selected cursus, tab, project filter and card side
+  `BoxWithConstraints`. Below 600 dp it shows one `LazyColumn`; from 600 dp
+  it shows two panes. The left pane is as wide as it can be while the whole
+  card still fits in its height, kept between 300 and 440 dp so the card's
+  text stays readable on short screens. That height is measured as if the top
+  bar were fully shown, so the card keeps its size while the bar scrolls away.
+  Both layouts share the same composables.
+- **Screen state**: the selected cursus, project filter and order, and card side
   live in the profile ViewModel and in its `SavedStateHandle`, which Android
   restores after closing the app in the background. Since they do not live in
   the composables, switching between the one and two pane layouts keeps them.
@@ -207,10 +249,10 @@ android/
     data/                                           UserRepository, JSON to model mapping
     data/auth/                                      token storage, renewal, interceptor, authenticator
     data/net/                                       Retrofit interface, JSON models, HTTP client, rate limit
-    ui/                                             navigation, theme, search screen
+    ui/                                             navigation, theme, search screen, language switch
     ui/debug/                                       token inspector (debug builds only)
-    ui/profile/                                     profile screen, cursus selector, tabs, level panel, details, skills, projects
-    ui/profile/card/                                profile card (front, back, flip), level ring and skills radar
+    ui/profile/                                     profile screen, cursus selector, level panel, details, projects
+    ui/profile/card/                                profile card (front, back, flip), level ring, skills radar, wallet sign
   app/src/test/                                     unit tests and a local fake of the API
 ```
 
@@ -222,8 +264,10 @@ through the real OkHttp and Retrofit stack without touching the API. They
 cover token reuse, reuse after a restart, renewal before expiry, renewal and
 replay after a 401, rejected credentials, an unreadable token answer, both
 inspector actions, error mapping (404, 429, 5xx, malformed JSON, no
-connection), JSON to model mapping (including project
-status and order), cursus selection, the axes of the skills chart, grouping and
-filtering projects by cursus and status, login validation, and restoring the
-search text, the selected cursus, tab, filter and card side after Android
-kills the app process.
+connection), hidden profiles (staff, not started, blackholed with both values
+of the setting) without extra requests, the coalition points, JSON to model
+mapping (including project status and order), the profile kind rules, cursus
+selection, the axes of the main and piscine charts, the projects of each
+cursus with their filter and sort orders, login validation, and restoring the
+search text, the selected cursus, project filter and order, and card side
+after Android kills the app process.

@@ -14,12 +14,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.AppError
+import com.ravazque.swiftycompanion.model.ProfileKind
 
 @Composable
 fun AppError.message(): String = when (this) {
     AppError.EmptyLogin -> stringResource(R.string.error_empty_login)
     AppError.InvalidLogin -> stringResource(R.string.error_invalid_login)
     is AppError.NotFound -> stringResource(R.string.error_not_found, login)
+    is AppError.Hidden -> stringResource(kind.hiddenMessage, login)
     AppError.Network -> stringResource(R.string.error_network)
     AppError.RateLimited -> stringResource(R.string.error_rate_limited)
     AppError.MissingCredentials -> stringResource(R.string.error_missing_credentials)
@@ -31,7 +33,15 @@ fun AppError.message(): String = when (this) {
 
 // Errors about what the user typed are shown under the text field instead of in a panel.
 val AppError.isInputError: Boolean
-    get() = this is AppError.EmptyLogin || this is AppError.InvalidLogin || this is AppError.NotFound
+    get() = this is AppError.EmptyLogin || this is AppError.InvalidLogin || this is AppError.NotFound ||
+        this is AppError.Hidden
+
+private val ProfileKind.hiddenMessage: Int
+    get() = when (this) {
+        ProfileKind.STAFF -> R.string.error_hidden_staff
+        ProfileKind.BLACKHOLED -> R.string.error_hidden_blackholed
+        ProfileKind.PISCINER, ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.ALUMNI -> R.string.error_hidden_pisciner
+    }
 
 val AppError.isRetryable: Boolean
     get() = this is AppError.Network || this is AppError.RateLimited || this is AppError.Forbidden ||

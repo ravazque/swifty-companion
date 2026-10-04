@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColors = darkColorScheme(
-    primary = DefaultAccent,
+    primary = Blue,
     onPrimary = Ink,
     secondary = Muted,
     onSecondary = Ink,

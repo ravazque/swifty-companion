@@ -14,9 +14,11 @@ import java.io.Closeable
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
-const val MINIMAL_USER = """{"id": 1, "login": "jdoe"}"""
+// The smallest profile the app shows: a student whose main cursus started in the past.
+const val MINIMAL_USER =
+    """{"id": 1, "login": "jdoe", "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z", "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""
 
-// Local stand-in for the API: token endpoint, user endpoint and coalitions, with scriptable answers.
+// Local stand-in for the API: token, user, coalitions and coalition scores, with scriptable answers.
 class FakeIntra : Closeable {
     val server = MockWebServer()
     val tokenRequests = AtomicInteger()
@@ -25,6 +27,8 @@ class FakeIntra : Closeable {
 
     var tokenResponse: (Int) -> MockResponse = { n -> json(200, """{"access_token": "t$n", "expires_in": 7200}""") }
     var userResponse: (RecordedRequest, Int) -> MockResponse = { _, _ -> json(200, MINIMAL_USER) }
+    var coalitions = "[]"
+    var coalitionScores = "[]"
 
     init {
         server.dispatcher = object : Dispatcher() {
@@ -32,7 +36,8 @@ class FakeIntra : Closeable {
                 val path = request.url.encodedPath
                 return when {
                     path == "/oauth/token" -> tokenResponse(tokenRequests.incrementAndGet())
-                    path.endsWith("/coalitions") -> json(200, "[]")
+                    path.endsWith("/coalitions") -> json(200, coalitions)
+                    path.endsWith("/coalitions_users") -> json(200, coalitionScores)
                     else -> {
                         userAuthHeaders += request.headers["Authorization"]
                         userResponse(request, userAuthHeaders.size)
@@ -51,10 +56,11 @@ class FakeIntra : Closeable {
         store: TokenStore = MemoryStore(),
         clock: () -> Long = { 0L },
         clientId: String = "id",
+        showBlackholed: Boolean = false,
     ): UserRepository {
         val client = ApiClient(server.url("/").toString(), clientId, "secret", store, clock, sleep = { sleeps += it })
         tokens = client.tokens
-        return UserRepository(client.api, client.tokens)
+        return UserRepository(client.api, client.tokens, showBlackholed)
     }
 
     override fun close() = server.close()
