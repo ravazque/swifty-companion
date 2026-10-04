@@ -46,7 +46,7 @@ Built with Kotlin and Jetpack Compose.
   system back gesture.
 - One access token reused across requests and app restarts, renewed before it
   expires and again if the server rejects it.
-- Token inspector in debug builds (lock icon in the top bar): token
+- Token inspector in debug builds (lock icon at the top of both screens): token
   fingerprint, time left, how many API requests and token requests the app has
   made, the last renewal and its cause, and two buttons that expire or corrupt
   the stored token to exercise both renewal paths.
@@ -118,8 +118,8 @@ cd android
 2. The profile opens if the login exists. The refresh icon reloads it.
 3. Tap the card to see the skills radar on its back; tap again to turn it
    over. The chips above the card choose the cursus.
-4. Scroll down to the Skills and Projects tabs. In Projects, the chips at the
-   top filter by status.
+4. Scroll down to the Skills and Projects tabs (on wide screens they are on
+   the right). In Projects, the chips at the top filter by status.
 5. Go back with the arrow in the top bar or the system back gesture.
 
 Filter Logcat by the tag `SwiftyAuth` to see when the access token is reused
@@ -186,8 +186,8 @@ does not change after these actions.
 - **Layout**: `ProfileScreen` measures the space it gets with
   `BoxWithConstraints`. Below 600 dp it shows one `LazyColumn` whose tabs stay
   pinned at the top; from 600 dp it shows two panes. The left pane is as wide
-  as lets the whole card fit in its height, between 300 and 440 dp, so the
-  card's text stays readable on short screens. That height is measured as if
+  as it can be while the whole card still fits in its height, kept between 300
+  and 440 dp so the card's text stays readable on short screens. That height is measured as if
   the top bar were fully shown, so the card keeps its size while the bar
   scrolls away. Both layouts share the same composables.
 - **Screen state**: the selected cursus, tab, project filter and card side
