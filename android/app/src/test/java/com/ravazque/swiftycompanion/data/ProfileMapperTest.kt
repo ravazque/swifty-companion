@@ -51,12 +51,23 @@ class ProfileMapperTest {
     }
 
     @Test
-    fun projectStatusFollowsStatusThenValidation() {
+    fun projectStatusFollowsTheLatestGrade() {
         val byName = profile.projects.associate { it.name to it.status }
         assertEquals(ProjectStatus.VALIDATED, byName["Libft"])
         assertEquals(ProjectStatus.FAILED, byName["Printf"])
         assertEquals(ProjectStatus.IN_PROGRESS, byName["Shell"])
-        assertEquals(ProjectStatus.IN_PROGRESS, byName["Pipex"])
+        // Graded attempts count even when the status is still open (a retry, an old piscine exam).
+        assertEquals(ProjectStatus.VALIDATED, byName["Pipex"])
+        assertEquals(ProjectStatus.FAILED, byName["C Piscine Exam 02"])
+        assertEquals(ProjectStatus.FAILED, byName["Rush 00"])
+    }
+
+    @Test
+    fun projectsInProgressComeFirstThenNewestGrade() {
+        assertEquals(
+            listOf("Shell", "Printf", "Libft", "Pipex", "C Piscine Exam 02", "Rush 00"),
+            profile.projects.map { it.name },
+        )
     }
 
     @Test

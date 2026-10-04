@@ -1,21 +1,24 @@
 package com.ravazque.swiftycompanion.ui.profile
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,6 +29,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.ravazque.swiftycompanion.R
@@ -47,23 +51,56 @@ fun CursusSelector(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    FlowRow(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         cursus.forEach { item ->
             FilterChip(
                 selected = item.id == selectedId,
                 onClick = { onSelect(item.id) },
                 label = { Text(item.name) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = accent.copy(alpha = 0.18f),
-                    selectedLabelColor = accent,
-                ),
+                colors = accentChipColors(accent),
             )
         }
     }
 }
+
+@Composable
+internal fun accentChipColors(accent: Color) = FilterChipDefaults.filterChipColors(
+    selectedContainerColor = accent.copy(alpha = 0.18f),
+    selectedLabelColor = accent,
+)
+
+@Composable
+fun ProfileTabs(selected: ProfileTab, accent: Color, onSelect: (ProfileTab) -> Unit, modifier: Modifier = Modifier) {
+    PrimaryTabRow(
+        selectedTabIndex = selected.ordinal,
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.background,
+        indicator = {
+            TabRowDefaults.PrimaryIndicator(
+                modifier = Modifier.tabIndicatorOffset(selected.ordinal, matchContentSize = true),
+                width = Dp.Unspecified,
+                color = accent,
+            )
+        },
+        divider = { HorizontalDivider(color = LineSoft) },
+    ) {
+        ProfileTab.entries.forEach { tab ->
+            Tab(
+                selected = tab == selected,
+                onClick = { onSelect(tab) },
+                text = { Text(stringResource(tab.title)) },
+                selectedContentColor = accent,
+                unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+private val ProfileTab.title: Int
+    get() = when (this) {
+        ProfileTab.SKILLS -> R.string.skills_title
+        ProfileTab.PROJECTS -> R.string.projects_title
+    }
 
 @Composable
 fun LevelBlock(cursus: Cursus, accent: Color, modifier: Modifier = Modifier) {
@@ -125,16 +162,7 @@ fun SkillsSection(cursus: Cursus?, accent: Color, modifier: Modifier = Modifier)
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(R.string.skills_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                cursus?.let {
-                    Text(it.name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+            cursus?.let { SectionHeader(it.name, skills.size) }
             if (skills.isEmpty()) {
                 Text(stringResource(R.string.skills_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -177,7 +205,20 @@ private fun SkillRow(skill: Skill, accent: Color, locale: Locale) {
 }
 
 @Composable
-private fun Section(modifier: Modifier, content: @Composable () -> Unit) {
+internal fun SectionHeader(title: String, count: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.bodySmall,
+            fontFamily = FontFamily.Monospace,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+internal fun Section(modifier: Modifier, content: @Composable () -> Unit) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),

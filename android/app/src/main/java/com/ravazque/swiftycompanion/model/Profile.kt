@@ -24,6 +24,16 @@ data class Profile(
     val mainCursus: Cursus? get() = cursus.firstOrNull()
 
     fun cursusOrMain(id: Int?): Cursus? = cursus.firstOrNull { it.id == id } ?: mainCursus
+
+    // Each project once, under the first of its cursus in display order (the given cursus, then
+    // the rest as listed); projects of no listed cursus go last, in a group without cursus.
+    fun projectGroups(firstCursusId: Int?, status: ProjectStatus?): List<ProjectGroup> {
+        val order = cursus.sortedByDescending { it.id == firstCursusId }
+        val byCursus = projects
+            .filter { status == null || it.status == status }
+            .groupBy { project -> order.firstOrNull { it.id in project.cursusIds } }
+        return (order + null).mapNotNull { cursus -> byCursus[cursus]?.let { ProjectGroup(cursus, it) } }
+    }
 }
 
 data class Cursus(
@@ -79,5 +89,7 @@ data class ProjectRecord(
     val markedAt: Instant?,
     val cursusIds: List<Int>,
 )
+
+data class ProjectGroup(val cursus: Cursus?, val projects: List<ProjectRecord>)
 
 data class Coalition(val name: String, val color: String?, val imageUrl: String?)

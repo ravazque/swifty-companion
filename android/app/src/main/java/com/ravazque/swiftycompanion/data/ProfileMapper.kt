@@ -32,7 +32,8 @@ fun UserDto.toProfile(coalition: CoalitionDto?): Profile = Profile(
     cursus = cursusUsers
         .sortedWith(compareByDescending<CursusUserDto> { it.cursus.slug == Cursus.MAIN_SLUG }.thenByDescending { it.beginAt })
         .map { it.toCursus() },
-    projects = projectsUsers.map { it.toRecord() }.sortedByDescending { it.markedAt },
+    projects = projectsUsers.map { it.toRecord() }
+        .sortedWith(compareBy<ProjectRecord> { it.status != ProjectStatus.IN_PROGRESS }.thenByDescending { it.markedAt }),
     coalition = coalition?.let { Coalition(it.name, it.color, it.imageUrl) },
 )
 
@@ -63,10 +64,12 @@ private fun CursusUserDto.toCursus() = Cursus(
 
 private fun ProjectUserDto.toRecord() = ProjectRecord(
     name = project.name,
+    // The latest grade decides: an open status with a grade is a retry or an attempt that never
+    // closed (old piscine exams stay "in_progress" with their mark).
     status = when {
-        status != "finished" -> ProjectStatus.IN_PROGRESS
         validated == true -> ProjectStatus.VALIDATED
-        else -> ProjectStatus.FAILED
+        validated == false || status == "finished" -> ProjectStatus.FAILED
+        else -> ProjectStatus.IN_PROGRESS
     },
     finalMark = finalMark,
     markedAt = markedAt?.let { runCatching { Instant.parse(it) }.getOrNull() },

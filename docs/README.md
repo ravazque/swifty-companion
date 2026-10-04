@@ -2,7 +2,7 @@
 
 An Android app to look up 42 student profiles through the 42 API v2. Type a
 login and the app shows the profile: photo, level, contact details, location,
-wallet, skills and more.
+wallet, skills, projects and more.
 
 Built with Kotlin and Jetpack Compose.
 
@@ -24,8 +24,18 @@ Built with Kotlin and Jetpack Compose.
   follow the selected one.
 - Level panel with the exact level and the percentage towards the next one.
 - Details: email, phone (or "Hidden"), campus and pool.
-- Skills of the selected cursus, from the highest level down: level with two
-  decimals and percentage of the 0-21 scale, with a progress bar.
+- Skills and Projects tabs, pinned to the top while the list scrolls.
+- Skills tab: the skills of the selected cursus, from the highest level down:
+  level with two decimals and percentage of the 0-21 scale, with a progress
+  bar.
+- Projects tab: every project of the user, including the failed ones, grouped
+  by cursus with the selected cursus first. Each project shows its mark, its
+  status (validated, failed or in progress, in color) and the date it was
+  graded. Filter chips show how many projects have each status and narrow the
+  list down to one of them.
+- The selected cursus, tab and filter, the text typed in the search and the
+  side of the card are kept when the screen rotates and when Android closes
+  the app in the background.
 - Refresh from the profile; back to the search with the top bar arrow or the
   system back gesture.
 - One access token reused across requests and app restarts, renewed before it
@@ -96,7 +106,11 @@ cd android
 
 1. Type a login and press Search or the keyboard's search key.
 2. The profile opens if the login exists. The refresh icon reloads it.
-3. Go back with the arrow in the top bar or the system back gesture.
+3. Tap the card to see the skills radar on its back; tap again to turn it
+   over. The chips above the card choose the cursus.
+4. Scroll down to the Skills and Projects tabs. In Projects, the chips at the
+   top filter by status.
+5. Go back with the arrow in the top bar or the system back gesture.
 
 Filter Logcat by the tag `Auth` to see when the access token is reused or
 renewed. The token itself is never logged.
@@ -131,6 +145,14 @@ renewed. The token itself is never logged.
 - **Skills radar**: drawn by hand with `drawWithCache` and a `TextMeasurer`.
   The radius is the largest one that keeps every label inside the card, and
   labels that would overlap their neighbors are moved apart.
+- **Project status**: the latest grade decides. A project with a validated
+  grade is validated; with a failed grade, or finished without validation, it
+  is failed; without a grade it is in progress. This matters because some
+  attempts keep an open status after being graded (piscine exams stay
+  "in_progress" with their mark).
+- **Screen state**: the selected cursus, tab and project filter live in the
+  profile ViewModel and in its `SavedStateHandle`, which Android restores
+  after closing the app in the background.
 
 ## Project structure
 
@@ -145,7 +167,7 @@ android/
     data/auth/                                      token storage, renewal, interceptor, authenticator
     data/net/                                       Retrofit interface, JSON models, HTTP client, rate limit
     ui/                                             navigation, theme, search screen
-    ui/profile/                                     profile screen, cursus selector, level panel, details, skills
+    ui/profile/                                     profile screen, cursus selector, tabs, level panel, details, skills, projects
     ui/profile/card/                                profile card (front, back, flip), level ring and skills radar
   app/src/test/                                     unit tests and a local fake of the API
 ```
@@ -157,6 +179,8 @@ use a local HTTP server that imitates the token and user endpoints, so they go
 through the real OkHttp and Retrofit stack without touching the API. They
 cover token reuse, reuse after a restart, renewal before expiry, renewal and
 replay after a 401, rejected credentials, error mapping (404, 429, 5xx,
-malformed JSON, no connection), JSON to model mapping, cursus selection, the
-axes of the skills chart, login validation, and restoring the search text and
-the selected cursus after Android kills the app process.
+malformed JSON, no connection), JSON to model mapping (including project
+status and order), cursus selection, the axes of the skills chart, grouping and
+filtering projects by cursus and status, login validation, and restoring the
+search text, the selected cursus, tab and filter after Android kills the app
+process.

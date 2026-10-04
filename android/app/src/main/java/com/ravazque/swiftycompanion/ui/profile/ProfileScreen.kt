@@ -1,5 +1,6 @@
 package com.ravazque.swiftycompanion.ui.profile
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
@@ -16,11 +18,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,10 +35,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.Profile
+import com.ravazque.swiftycompanion.model.ProjectStatus
 import com.ravazque.swiftycompanion.ui.components.ErrorPanel
 import com.ravazque.swiftycompanion.ui.profile.card.ProfileCard
 import com.ravazque.swiftycompanion.ui.profile.card.accentColor
 import com.ravazque.swiftycompanion.ui.theme.SwiftyTheme
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(
@@ -48,6 +54,8 @@ fun ProfileScreen(
         onBack = onBack,
         onRefresh = viewModel::load,
         onSelectCursus = viewModel::selectCursus,
+        onSelectTab = viewModel::selectTab,
+        onSelectProjectFilter = viewModel::selectProjectFilter,
     )
 }
 
@@ -59,6 +67,8 @@ fun ProfileContent(
     onBack: () -> Unit,
     onRefresh: () -> Unit,
     onSelectCursus: (Int) -> Unit,
+    onSelectTab: (ProfileTab) -> Unit,
+    onSelectProjectFilter: (ProjectStatus?) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -80,7 +90,7 @@ fun ProfileContent(
         Box(Modifier.fillMaxSize().padding(padding)) {
             val profile = state.profile
             when {
-                profile != null -> ProfileBody(profile, state, onRefresh, onSelectCursus)
+                profile != null -> ProfileBody(profile, state, onRefresh, onSelectCursus, onSelectTab, onSelectProjectFilter)
                 state.error != null -> ErrorPanel(
                     error = state.error,
                     onRetry = onRefresh,
@@ -101,12 +111,25 @@ private fun ProfileBody(
     state: ProfileUiState,
     onRetry: () -> Unit,
     onSelectCursus: (Int) -> Unit,
+    onSelectTab: (ProfileTab) -> Unit,
+    onSelectProjectFilter: (ProjectStatus?) -> Unit,
 ) {
     val cursus = profile.cursusOrMain(state.selectedCursusId)
     val accent = profile.accentColor()
     val column = Modifier.widthIn(max = 440.dp).fillMaxWidth()
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    // With the tabs pinned, a new tab starts at its top instead of wherever the old one was.
+    val selectTab: (ProfileTab) -> Unit = { tab ->
+        onSelectTab(tab)
+        val tabs = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == TABS_KEY }
+        if (tabs != null && tabs.index < listState.firstVisibleItemIndex) {
+            scope.launch { listState.scrollToItem(tabs.index) }
+        }
+    }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        state = listState,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -119,14 +142,32 @@ private fun ProfileBody(
         item(key = "card") { ProfileCard(profile, cursus, column) }
         cursus?.let { item(key = "level") { LevelBlock(it, accent, column) } }
         item(key = "details") { DetailsSection(profile, column) }
-        item(key = "skills") { SkillsSection(cursus, accent, column) }
+        stickyHeader(key = TABS_KEY) {
+            Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background), Alignment.Center) {
+                ProfileTabs(state.tab, accent, selectTab, column)
+            }
+        }
+        when (state.tab) {
+            ProfileTab.SKILLS -> item(key = "skills") { SkillsSection(cursus, accent, column) }
+            ProfileTab.PROJECTS -> projectItems(profile, cursus?.id, state.projectFilter, accent, onSelectProjectFilter, column)
+        }
     }
 }
+
+private const val TABS_KEY = "tabs"
 
 @Preview(showBackground = true, backgroundColor = 0xFF08090D, heightDp = 1600)
 @Composable
 private fun ProfilePreview() {
     SwiftyTheme {
-        ProfileContent("jdoe", ProfileUiState(profile = previewProfile), {}, {}, {})
+        ProfileContent("jdoe", ProfileUiState(profile = previewProfile), {}, {}, {}, {}, {})
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF08090D, heightDp = 1600)
+@Composable
+private fun ProfileProjectsPreview() {
+    SwiftyTheme {
+        ProfileContent("jdoe", ProfileUiState(profile = previewProfile, tab = ProfileTab.PROJECTS), {}, {}, {}, {}, {})
     }
 }

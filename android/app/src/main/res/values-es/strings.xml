@@ -39,4 +39,16 @@
     <string name="card_flip_action">girar la tarjeta</string>
     <string name="skills_title">Habilidades</string>
     <string name="skills_empty">Sin habilidades</string>
+
+    <string name="projects_title">Proyectos</string>
+    <string name="projects_other">Otros</string>
+    <string name="projects_empty">Sin proyectos</string>
+    <string name="projects_empty_filter">Ningún proyecto con este estado</string>
+    <string name="filter_all">Todos</string>
+    <string name="filter_validated">Validados</string>
+    <string name="filter_failed">Fallidos</string>
+    <string name="filter_in_progress">En curso</string>
+    <string name="status_validated">Validado</string>
+    <string name="status_failed">Fallido</string>
+    <string name="status_in_progress">En curso</string>
 </resources>

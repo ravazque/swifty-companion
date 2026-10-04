@@ -2,6 +2,8 @@ package com.ravazque.swiftycompanion.ui
 
 import androidx.lifecycle.SavedStateHandle
 import com.ravazque.swiftycompanion.FakeIntra
+import com.ravazque.swiftycompanion.model.ProjectStatus
+import com.ravazque.swiftycompanion.ui.profile.ProfileTab
 import com.ravazque.swiftycompanion.ui.profile.ProfileViewModel
 import com.ravazque.swiftycompanion.ui.search.SearchViewModel
 import kotlinx.coroutines.test.runTest
@@ -37,5 +39,20 @@ class StateRestoreTest {
         val restored = ProfileViewModel("jdoe", saved.afterProcessDeath(), repository)
 
         assertEquals(9, restored.state.value.selectedCursusId)
+    }
+
+    @Test
+    fun tabAndProjectFilterSurviveProcessDeath() = runTest {
+        val repository = intra.repository().apply { fetch("jdoe") }
+        val saved = SavedStateHandle()
+        ProfileViewModel("jdoe", saved, repository).apply {
+            selectTab(ProfileTab.PROJECTS)
+            selectProjectFilter(ProjectStatus.FAILED)
+        }
+
+        val restored = ProfileViewModel("jdoe", saved.afterProcessDeath(), repository).state.value
+
+        assertEquals(ProfileTab.PROJECTS, restored.tab)
+        assertEquals(ProjectStatus.FAILED, restored.projectFilter)
     }
 }

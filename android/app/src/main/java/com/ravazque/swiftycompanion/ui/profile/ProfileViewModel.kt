@@ -12,6 +12,7 @@ import com.ravazque.swiftycompanion.SwiftyApp
 import com.ravazque.swiftycompanion.data.UserRepository
 import com.ravazque.swiftycompanion.model.AppError
 import com.ravazque.swiftycompanion.model.Profile
+import com.ravazque.swiftycompanion.model.ProjectStatus
 import com.ravazque.swiftycompanion.ui.ProfileDestination
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,11 +21,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class ProfileTab { SKILLS, PROJECTS }
+
 data class ProfileUiState(
     val profile: Profile? = null,
     val loading: Boolean = false,
     val error: AppError? = null,
     val selectedCursusId: Int? = null,
+    val tab: ProfileTab = ProfileTab.SKILLS,
+    val projectFilter: ProjectStatus? = null,
 )
 
 class ProfileViewModel(
@@ -35,7 +40,12 @@ class ProfileViewModel(
     // The search screen already fetched this login; the network is only hit again on refresh
     // or when the process was killed and the in-memory cache is gone.
     private val _state = MutableStateFlow(
-        ProfileUiState(profile = repository.cached(login), selectedCursusId = savedState[CURSUS_KEY]),
+        ProfileUiState(
+            profile = repository.cached(login),
+            selectedCursusId = savedState[CURSUS_KEY],
+            tab = ProfileTab.entries.firstOrNull { it.name == savedState.get<String>(TAB_KEY) } ?: ProfileTab.SKILLS,
+            projectFilter = ProjectStatus.entries.firstOrNull { it.name == savedState.get<String>(FILTER_KEY) },
+        ),
     )
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
 
@@ -48,6 +58,16 @@ class ProfileViewModel(
     fun selectCursus(id: Int) {
         savedState[CURSUS_KEY] = id
         _state.update { it.copy(selectedCursusId = id) }
+    }
+
+    fun selectTab(tab: ProfileTab) {
+        savedState[TAB_KEY] = tab.name
+        _state.update { it.copy(tab = tab) }
+    }
+
+    fun selectProjectFilter(status: ProjectStatus?) {
+        savedState[FILTER_KEY] = status?.name
+        _state.update { it.copy(projectFilter = status) }
     }
 
     fun load() {
@@ -65,6 +85,8 @@ class ProfileViewModel(
 
     companion object {
         private const val CURSUS_KEY = "selectedCursusId"
+        private const val TAB_KEY = "tab"
+        private const val FILTER_KEY = "projectFilter"
 
         val Factory = viewModelFactory {
             initializer {
