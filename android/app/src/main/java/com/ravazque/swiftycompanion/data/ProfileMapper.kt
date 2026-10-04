@@ -37,7 +37,13 @@ fun UserDto.toProfile(now: Instant): Profile {
     )
 }
 
-fun CoalitionDto.toCoalition() = Coalition(name, color, imageUrl)
+// Only the four coalitions of the main cursus count, in this order if a user is in more than one;
+// any other (the piscine ones, for example) is ignored and the profile shows no coalition.
+private val MAIN_COALITIONS = listOf("zefiria", "marventis", "ignisaria", "tiamant")
+
+fun List<CoalitionDto>.mainCoalition(): Coalition? =
+    MAIN_COALITIONS.firstNotNullOfOrNull { slug -> firstOrNull { it.slug == slug } }
+        ?.let { Coalition(it.name, it.color, it.imageUrl) }
 
 private fun UserDto.pool(): YearMonth? {
     val year = poolYear?.toIntOrNull() ?: return null

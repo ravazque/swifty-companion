@@ -35,11 +35,14 @@ Built with Kotlin and Jetpack Compose.
   the selected one: card, radar, level panel, details and projects. The
   piscine is shown in a neutral blue, without the coalition; so is a profile
   without a coalition.
+- Coalitions: only the four of the main cursus count (Zefiria, Marventis,
+  Ignisaria and Tiamant, in that order if a user has more than one). Others,
+  like the piscine coalitions, are ignored; a profile with none of the four
+  shows no coalition and uses the neutral blue.
 - Level panel with the exact level, "level in the Cursus" or "level in the
   Piscine", and a bar with the progress towards the next level.
-- Details: the pool month and, outside the piscine, the kickoff date, the
-  black hole date with the days left and, for a Transcender, the alumni
-  deadline (see "Alumni deadline").
+- Details: the pool month and, outside the piscine, the kickoff date and, for
+  a Transcender, the alumni deadline (see "Alumni deadline").
 - Projects of the selected cursus, including the failed ones. Each one shows
   its mark, its status in color (passed, failed, in progress, waiting for
   correction, searching group, creating group) and the date it was graded. Two
@@ -158,8 +161,8 @@ search, so they also apply when a profile is refreshed.
 
 A Transcender (not an alumnus) has eight months from the last time they gained
 experience to become alumni. The app takes the date the latest passed project
-of the main cursus was graded, adds eight months and shows that date with the
-days left in the details, as "Alumni". While a "Work Experience I" or "Work
+of the main cursus was graded, adds eight months and shows that date in the
+details, as "Alumni". While a "Work Experience I" or "Work
 Experience II" project is open (not passed or failed), the count is paused
 and the row says "PAUSED".
 
@@ -233,7 +236,7 @@ does not change after these actions.
   their mark), which is why the grade comes first for them.
 - **Hidden profiles**: the repository classifies the profile right after the
   user request and stops there if it is hidden, so a hidden profile costs one
-  request. Visible ones also fetch the coalition.
+  request. Visible ones also fetch the coalitions and keep the main cursus one.
 - **Language**: on Android 13 and newer the switch sets the app language
   through the system's `LocaleManager`; on older versions the choice is kept
   in preferences and applied when the activity starts. Every language ships
@@ -279,7 +282,8 @@ cover token reuse, reuse after a restart, renewal before expiry, renewal and
 replay after a 401, rejected credentials, an unreadable token answer, both
 inspector actions, error mapping (404, 429, 5xx, malformed JSON, no
 connection), hidden profiles (not started, and staff and blackholed with every
-combination of the search options) without extra requests, the coalition, the
+combination of the search options) without extra requests, which coalition is
+kept, the
 alumni deadline (date, pause by an open work experience, who has one), JSON to model
 mapping (including project status and order), the profile kind rules, cursus
 selection, the axes of the main and piscine charts, the projects of each

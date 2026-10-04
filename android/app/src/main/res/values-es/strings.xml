@@ -24,15 +24,9 @@
 
     <string name="profile_pool">Piscina</string>
     <string name="profile_kickoff">Kickoff</string>
-    <string name="profile_blackhole">Agujero negro</string>
     <string name="profile_alumni">Alumni</string>
     <string name="profile_paused">PAUSADO</string>
     <string name="profile_unavailable">No disponible</string>
-    <plurals name="profile_days_left">
-        <item quantity="one">%1$s · queda %2$d día</item>
-        <item quantity="many">%1$s · quedan %2$d días</item>
-        <item quantity="other">%1$s · quedan %2$d días</item>
-    </plurals>
 
     <string name="card_level_tag">NV %1$d</string>
     <string name="card_offline">Desconectado</string>

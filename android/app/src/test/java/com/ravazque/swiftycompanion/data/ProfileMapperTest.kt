@@ -1,5 +1,6 @@
 package com.ravazque.swiftycompanion.data
 
+import com.ravazque.swiftycompanion.data.net.CoalitionDto
 import com.ravazque.swiftycompanion.data.net.IntraJson
 import com.ravazque.swiftycompanion.data.net.UserDto
 import com.ravazque.swiftycompanion.model.ProfileKind
@@ -75,6 +76,18 @@ class ProfileMapperTest {
             listOf("Shell", "Rush 00", "Team", "Squad", "Printf", "Libft", "Pipex", "C Piscine Exam 02"),
             profile.projects.map { it.name },
         )
+    }
+
+    @Test
+    fun onlyTheFourMainCoalitionsCountInTheirOrder() {
+        fun coalition(slug: String) = CoalitionDto(slug.replaceFirstChar { it.uppercase() }, slug, "#000000", null)
+
+        assertEquals("Ignisaria", listOf(coalition("corvus"), coalition("ignisaria")).mainCoalition()?.name)
+        assertEquals("Zefiria", listOf(coalition("volans"), coalition("zefiria")).mainCoalition()?.name)
+        assertEquals("Zefiria", listOf(coalition("tiamant"), coalition("ignisaria"), coalition("marventis"), coalition("zefiria")).mainCoalition()?.name)
+        assertEquals("Marventis", listOf(coalition("tiamant"), coalition("marventis")).mainCoalition()?.name)
+        assertNull(listOf(coalition("corvus"), coalition("cassiopeia")).mainCoalition())
+        assertNull(emptyList<CoalitionDto>().mainCoalition())
     }
 
     @Test

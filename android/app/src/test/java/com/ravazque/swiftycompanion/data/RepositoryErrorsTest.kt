@@ -89,9 +89,10 @@ class RepositoryErrorsTest {
     }
 
     @Test
-    fun coalitionIsAddedToTheProfile() = runTest {
-        intra.coalitions = """[{"id": 7, "name": "Zefiria", "color": "#E39F0B"}]"""
-        assertEquals(Coalition("Zefiria", "#E39F0B", null), intra.repository().fetch("jdoe").coalition)
+    fun theMainCursusCoalitionIsAddedToTheProfile() = runTest {
+        intra.coalitions = """[{"id": 555, "name": "Corvus", "slug": "corvus", "color": "#d087ab"},
+            {"id": 398, "name": "Ignisaria", "slug": "ignisaria", "color": "#C2301D"}]"""
+        assertEquals(Coalition("Ignisaria", "#C2301D", null), intra.repository().fetch("jdoe").coalition)
     }
 
     @Test

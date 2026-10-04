@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -47,7 +46,6 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 @Composable
@@ -116,8 +114,7 @@ fun LevelBlock(cursus: Cursus, accent: Color, modifier: Modifier = Modifier) {
     }
 }
 
-// The pool always; outside the piscine also the kickoff, the alumni deadline of a transcender and
-// the black hole.
+// The pool always; outside the piscine also the kickoff and, for a transcender, the alumni deadline.
 @Composable
 fun DetailsSection(profile: Profile, cursus: Cursus?, modifier: Modifier = Modifier) {
     val locale = LocalConfiguration.current.locales[0]
@@ -130,21 +127,13 @@ fun DetailsSection(profile: Profile, cursus: Cursus?, modifier: Modifier = Modif
                 if (cursus.slug == Cursus.MAIN_SLUG) {
                     when (val deadline = profile.alumniDeadline(ZoneId.systemDefault())) {
                         AlumniDeadline.Paused -> DetailRow(stringResource(R.string.profile_alumni), stringResource(R.string.profile_paused))
-                        is AlumniDeadline.Due -> DetailRow(stringResource(R.string.profile_alumni), daysLeft(deadline.date, dates))
+                        is AlumniDeadline.Due -> DetailRow(stringResource(R.string.profile_alumni), deadline.date.format(dates))
                         null -> Unit
                     }
                 }
-                cursus.blackholedAt?.let { DetailRow(stringResource(R.string.profile_blackhole), daysLeft(it.localDate(), dates)) }
             }
         }
     }
-}
-
-@Composable
-private fun daysLeft(date: LocalDate, dates: DateTimeFormatter): String {
-    val days = ChronoUnit.DAYS.between(LocalDate.now(), date).toInt()
-    if (days < 0) return date.format(dates)
-    return pluralStringResource(R.plurals.profile_days_left, days, date.format(dates), days)
 }
 
 private fun Instant.localDate(): LocalDate = atZone(ZoneId.systemDefault()).toLocalDate()

@@ -77,6 +77,7 @@ data class TitleUserDto(@SerialName("title_id") val titleId: Int, val selected: 
 @Serializable
 data class CoalitionDto(
     val name: String,
+    val slug: String = "",
     val color: String? = null,
     @SerialName("image_url") val imageUrl: String? = null,
 )
