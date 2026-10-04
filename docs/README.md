@@ -33,9 +33,13 @@ Built with Kotlin and Jetpack Compose.
   status (validated, failed or in progress, in color) and the date it was
   graded. Filter chips show how many projects have each status and narrow the
   list down to one of them.
-- The selected cursus, tab and filter, the text typed in the search and the
-  side of the card are kept when the screen rotates and when Android closes
-  the app in the background.
+- Adaptive layout: one scrolling column on phones in portrait; from 600 dp
+  wide (tablets, phones in landscape, unfolded foldables) the card, level and
+  details sit on the left and the tabs on the right, each pane with its own
+  scroll. Content stays clear of the system bars and display cutouts.
+- The selected cursus, tab and filter, the side of the card and the text typed
+  in the search are kept when the screen rotates, when the layout changes and
+  when Android closes the app in the background.
 - Refresh from the profile; back to the search with the top bar arrow or the
   system back gesture.
 - One access token reused across requests and app restarts, renewed before it
@@ -150,9 +154,16 @@ renewed. The token itself is never logged.
   is failed; without a grade it is in progress. This matters because some
   attempts keep an open status after being graded (piscine exams stay
   "in_progress" with their mark).
-- **Screen state**: the selected cursus, tab and project filter live in the
-  profile ViewModel and in its `SavedStateHandle`, which Android restores
-  after closing the app in the background.
+- **Layout**: `ProfileScreen` measures the space it gets with
+  `BoxWithConstraints`. Below 600 dp it shows one `LazyColumn` whose tabs stay
+  pinned at the top; from 600 dp it shows two panes. The left pane is as wide
+  as lets the whole card fit in its height, between 300 and 440 dp, so the
+  card's text stays readable on short screens. Both layouts share the same
+  composables.
+- **Screen state**: the selected cursus, tab, project filter and card side
+  live in the profile ViewModel and in its `SavedStateHandle`, which Android
+  restores after closing the app in the background. Since they do not live in
+  the composables, switching between the one and two pane layouts keeps them.
 
 ## Project structure
 
@@ -182,5 +193,5 @@ replay after a 401, rejected credentials, error mapping (404, 429, 5xx,
 malformed JSON, no connection), JSON to model mapping (including project
 status and order), cursus selection, the axes of the skills chart, grouping and
 filtering projects by cursus and status, login validation, and restoring the
-search text, the selected cursus, tab and filter after Android kills the app
-process.
+search text, the selected cursus, tab, filter and card side after Android
+kills the app process.

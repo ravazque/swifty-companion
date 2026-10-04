@@ -30,6 +30,7 @@ data class ProfileUiState(
     val selectedCursusId: Int? = null,
     val tab: ProfileTab = ProfileTab.SKILLS,
     val projectFilter: ProjectStatus? = null,
+    val cardFlipped: Boolean = false,
 )
 
 class ProfileViewModel(
@@ -45,6 +46,7 @@ class ProfileViewModel(
             selectedCursusId = savedState[CURSUS_KEY],
             tab = ProfileTab.entries.firstOrNull { it.name == savedState.get<String>(TAB_KEY) } ?: ProfileTab.SKILLS,
             projectFilter = ProjectStatus.entries.firstOrNull { it.name == savedState.get<String>(FILTER_KEY) },
+            cardFlipped = savedState[FLIPPED_KEY] ?: false,
         ),
     )
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
@@ -70,6 +72,12 @@ class ProfileViewModel(
         _state.update { it.copy(projectFilter = status) }
     }
 
+    fun flipCard() {
+        val flipped = !_state.value.cardFlipped
+        savedState[FLIPPED_KEY] = flipped
+        _state.update { it.copy(cardFlipped = flipped) }
+    }
+
     fun load() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
@@ -87,6 +95,7 @@ class ProfileViewModel(
         private const val CURSUS_KEY = "selectedCursusId"
         private const val TAB_KEY = "tab"
         private const val FILTER_KEY = "projectFilter"
+        private const val FLIPPED_KEY = "cardFlipped"
 
         val Factory = viewModelFactory {
             initializer {

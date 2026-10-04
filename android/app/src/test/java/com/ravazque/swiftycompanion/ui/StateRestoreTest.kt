@@ -55,4 +55,18 @@ class StateRestoreTest {
         assertEquals(ProfileTab.PROJECTS, restored.tab)
         assertEquals(ProjectStatus.FAILED, restored.projectFilter)
     }
+
+    @Test
+    fun cardSideSurvivesProcessDeath() = runTest {
+        val repository = intra.repository().apply { fetch("jdoe") }
+        val saved = SavedStateHandle()
+        val viewModel = ProfileViewModel("jdoe", saved, repository).apply { flipCard() }
+        assertEquals(true, viewModel.state.value.cardFlipped)
+
+        val restored = ProfileViewModel("jdoe", saved.afterProcessDeath(), repository)
+
+        assertEquals(true, restored.state.value.cardFlipped)
+        restored.flipCard()
+        assertEquals(false, restored.state.value.cardFlipped)
+    }
 }

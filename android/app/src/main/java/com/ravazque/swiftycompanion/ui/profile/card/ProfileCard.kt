@@ -26,9 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,7 +75,7 @@ import java.util.Locale
 // Every size is a multiple of one unit (card width / 32), so the card scales as a single piece
 // on any screen; its text deliberately ignores the system font scale.
 
-private const val CARD_RATIO = 5f / 7f
+internal const val CARD_RATIO = 5f / 7f
 private val FlipEasing = CubicBezierEasing(0.2f, 0.7f, 0.3f, 1f)
 
 @Immutable
@@ -88,9 +85,14 @@ internal class CardScale(private val unit: Dp, private val density: Density) {
 }
 
 @Composable
-fun ProfileCard(profile: Profile, cursus: Cursus?, modifier: Modifier = Modifier) {
+fun ProfileCard(
+    profile: Profile,
+    cursus: Cursus?,
+    flipped: Boolean,
+    onFlip: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val accent = profile.accentColor()
-    var flipped by rememberSaveable { mutableStateOf(false) }
     val angle by animateFloatAsState(if (flipped) 180f else 0f, tween(550, easing = FlipEasing), label = "flip")
     CardFrame(
         modifier
@@ -104,7 +106,8 @@ fun ProfileCard(profile: Profile, cursus: Cursus?, modifier: Modifier = Modifier
                 indication = null,
                 onClickLabel = stringResource(R.string.card_flip_action),
                 role = Role.Button,
-            ) { flipped = !flipped },
+                onClick = onFlip,
+            ),
     ) { scale ->
         // Past 90 degrees the back faces the viewer; its own half turn cancels the mirroring.
         if (angle <= 90f) {
@@ -367,7 +370,7 @@ private fun Profile.initials(): String =
 @Composable
 private fun ProfileCardPreview() {
     SwiftyTheme {
-        ProfileCard(previewProfile, previewProfile.mainCursus, Modifier.padding(16.dp))
+        ProfileCard(previewProfile, previewProfile.mainCursus, flipped = false, onFlip = {}, modifier = Modifier.padding(16.dp))
     }
 }
 
