@@ -43,7 +43,7 @@ private val MAIN_COALITIONS = listOf("zefiria", "marventis", "ignisaria", "tiama
 
 fun List<CoalitionDto>.mainCoalition(): Coalition? =
     MAIN_COALITIONS.firstNotNullOfOrNull { slug -> firstOrNull { it.slug == slug } }
-        ?.let { Coalition(it.name, it.color, it.imageUrl) }
+        ?.let { Coalition(it.id, it.name, it.color, it.imageUrl) }
 
 private fun UserDto.pool(): YearMonth? {
     val year = poolYear?.toIntOrNull() ?: return null

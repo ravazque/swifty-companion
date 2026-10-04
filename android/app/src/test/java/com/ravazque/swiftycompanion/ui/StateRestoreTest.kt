@@ -2,8 +2,12 @@ package com.ravazque.swiftycompanion.ui
 
 import androidx.lifecycle.SavedStateHandle
 import com.ravazque.swiftycompanion.FakeIntra
+import com.ravazque.swiftycompanion.MINIMAL_USER
+import com.ravazque.swiftycompanion.MemoryProjectViewStore
+import com.ravazque.swiftycompanion.json
 import com.ravazque.swiftycompanion.model.ProjectSort
 import com.ravazque.swiftycompanion.model.ProjectStatus
+import com.ravazque.swiftycompanion.model.ProjectView
 import com.ravazque.swiftycompanion.model.Visibility
 import com.ravazque.swiftycompanion.ui.profile.ProfileViewModel
 import com.ravazque.swiftycompanion.ui.search.SearchViewModel
@@ -49,39 +53,54 @@ class StateRestoreTest {
     fun selectedCursusSurvivesProcessDeath() = runTest {
         val repository = intra.repository().apply { fetch("jdoe") }
         val saved = SavedStateHandle()
-        ProfileViewModel("jdoe", saved, repository).selectCursus(9)
+        ProfileViewModel("jdoe", saved, repository, MemoryProjectViewStore()).selectCursus(9)
 
-        val restored = ProfileViewModel("jdoe", saved.afterProcessDeath(), repository)
+        val restored = ProfileViewModel("jdoe", saved.afterProcessDeath(), repository, MemoryProjectViewStore())
 
         assertEquals(9, restored.state.value.selectedCursusId)
     }
 
+    // Kept in the settings store, not in the SavedStateHandle: it outlives the screen, the process and the app.
     @Test
-    fun projectFilterAndSortSurviveProcessDeath() = runTest {
-        val repository = intra.repository().apply { fetch("jdoe") }
-        val saved = SavedStateHandle()
-        ProfileViewModel("jdoe", saved, repository).apply {
-            selectProjectFilter(ProjectStatus.FAILED)
-            selectProjectSort(ProjectSort.NAME)
+    fun projectViewIsSharedWithinEachProfileGroup() = runTest {
+        intra.userResponse = { request, _ -> json(200, USERS.getValue(request.url.encodedPath.substringAfterLast('/'))) }
+        val repository = intra.repository(visibility = Visibility(staff = true)).apply { USERS.keys.forEach { fetch(it) } }
+        val views = MemoryProjectViewStore()
+        fun open(login: String) = ProfileViewModel(login, SavedStateHandle(), repository, views)
+
+        open("jdoe").apply {
+            selectProjectFilter(ProjectStatus.PASSED)
+            selectProjectSort(ProjectSort.GRADE)
         }
+        open("tran").selectProjectSort(ProjectSort.NAME)
 
-        val restored = ProfileViewModel("jdoe", saved.afterProcessDeath(), repository).state.value
-
-        assertEquals(ProjectStatus.FAILED, restored.projectFilter)
-        assertEquals(ProjectSort.NAME, restored.projectSort)
+        assertEquals(ProjectView(ProjectStatus.PASSED, ProjectSort.GRADE), open("amy").state.value.projectView)
+        assertEquals(ProjectView(sort = ProjectSort.NAME), open("old").state.value.projectView)
+        assertEquals(ProjectView(), open("boss").state.value.projectView)
     }
 
     @Test
     fun cardSideSurvivesProcessDeath() = runTest {
         val repository = intra.repository().apply { fetch("jdoe") }
         val saved = SavedStateHandle()
-        val viewModel = ProfileViewModel("jdoe", saved, repository).apply { flipCard() }
+        val viewModel = ProfileViewModel("jdoe", saved, repository, MemoryProjectViewStore()).apply { flipCard() }
         assertEquals(true, viewModel.state.value.cardFlipped)
 
-        val restored = ProfileViewModel("jdoe", saved.afterProcessDeath(), repository)
+        val restored = ProfileViewModel("jdoe", saved.afterProcessDeath(), repository, MemoryProjectViewStore())
 
         assertEquals(true, restored.state.value.cardFlipped)
         restored.flipCard()
         assertEquals(false, restored.state.value.cardFlipped)
     }
 }
+
+// Two students, a transcender, an alumni and a staff member.
+private val USERS = mapOf(
+    "jdoe" to MINIMAL_USER,
+    "amy" to """{"id": 2, "login": "amy", "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z",
+        "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}""",
+    "tran" to """{"id": 3, "login": "tran", "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z", "grade": "Transcender",
+        "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}""",
+    "old" to """{"id": 4, "login": "old", "alumni?": true}""",
+    "boss" to """{"id": 5, "login": "boss", "staff?": true}""",
+)

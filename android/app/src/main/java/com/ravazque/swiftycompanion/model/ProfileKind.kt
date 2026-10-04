@@ -6,6 +6,17 @@ import java.time.ZoneId
 
 enum class ProfileKind { STUDENT, TRANSCENDER, ALUMNI, BLACKHOLED, PISCINER, STAFF }
 
+// Profiles of one group share the project filter and sort: opening another of the same group keeps them.
+enum class ProfileGroup { STUDENTS, GRADUATES, STAFF, BLACKHOLED }
+
+val ProfileKind.group: ProfileGroup
+    get() = when (this) {
+        ProfileKind.STUDENT, ProfileKind.PISCINER -> ProfileGroup.STUDENTS
+        ProfileKind.TRANSCENDER, ProfileKind.ALUMNI -> ProfileGroup.GRADUATES
+        ProfileKind.STAFF -> ProfileGroup.STAFF
+        ProfileKind.BLACKHOLED -> ProfileGroup.BLACKHOLED
+    }
+
 // Kinds the search may also show besides students, transcenders and alumni; both off by default.
 data class Visibility(val staff: Boolean = false, val blackholed: Boolean = false)
 

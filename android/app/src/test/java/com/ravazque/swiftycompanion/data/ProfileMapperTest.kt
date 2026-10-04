@@ -80,7 +80,7 @@ class ProfileMapperTest {
 
     @Test
     fun onlyTheFourMainCoalitionsCountInTheirOrder() {
-        fun coalition(slug: String) = CoalitionDto(slug.replaceFirstChar { it.uppercase() }, slug, "#000000", null)
+        fun coalition(slug: String) = CoalitionDto(name = slug.replaceFirstChar { it.uppercase() }, slug = slug)
 
         assertEquals("Ignisaria", listOf(coalition("corvus"), coalition("ignisaria")).mainCoalition()?.name)
         assertEquals("Zefiria", listOf(coalition("volans"), coalition("zefiria")).mainCoalition()?.name)

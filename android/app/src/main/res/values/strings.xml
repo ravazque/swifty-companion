@@ -40,6 +40,7 @@
     <string name="label_level">Level</string>
     <string name="label_wallet">Wallet</string>
     <string name="label_points">Points</string>
+    <string name="label_coalition">Coalition</string>
     <string name="level_in_cursus">level in the %1$s</string>
     <string name="level_in_piscine">level in the %1$s</string>
     <string name="level_word_cursus">Cursus</string>

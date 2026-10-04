@@ -1,5 +1,6 @@
 package com.ravazque.swiftycompanion.data
 
+import com.ravazque.swiftycompanion.BuildConfig
 import com.ravazque.swiftycompanion.data.auth.TokenException
 import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.data.net.IntraApi
@@ -7,6 +8,7 @@ import com.ravazque.swiftycompanion.model.AppError
 import com.ravazque.swiftycompanion.model.Profile
 import com.ravazque.swiftycompanion.model.Visibility
 import com.ravazque.swiftycompanion.model.isHidden
+import com.ravazque.swiftycompanion.model.loginList
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
@@ -18,6 +20,8 @@ class UserRepository(
     private val api: IntraApi,
     private val tokens: TokenManager,
     private val visibilityStore: VisibilityStore,
+    // Answered as nonexistent without asking the API: BLOCKED_LOGINS in .env, so no login is published with the code.
+    private val blockedLogins: Set<String> = loginList(BuildConfig.BLOCKED_LOGINS),
     private val now: () -> Instant = Instant::now,
 ) {
     private val cache = ConcurrentHashMap<String, Profile>()
@@ -31,11 +35,15 @@ class UserRepository(
 
     suspend fun fetch(login: String): Profile {
         if (!tokens.hasCredentials) throw AppError.MissingCredentials
+        if (login in blockedLogins) throw AppError.NotFound(login)
         try {
             val profile = api.user(login).toProfile(now())
-            // Checked before the coalition call: a hidden profile costs a single request.
+            // Checked before the coalition calls: a hidden profile costs a single request.
             if (profile.kind.isHidden(visibility)) throw AppError.Hidden(login, profile.kind)
-            val coalition = optional { api.coalitions(login).mainCoalition() }
+            // The score is the user's own in that coalition (it can be negative).
+            val coalition = optional { api.coalitions(login).mainCoalition() }?.let { main ->
+                main.copy(score = optional { api.coalitionsUsers(login).firstOrNull { it.coalitionId == main.id }?.score })
+            }
             return profile.copy(coalition = coalition).also { cache[login] = it }
         } catch (e: CancellationException) {
             throw e

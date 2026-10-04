@@ -12,9 +12,9 @@ val env = Properties().apply {
         ?.let { load(it.reader()) }
 }
 
-fun envString(key: String): String {
+fun envString(key: String, required: Boolean = true): String {
     val value = env.getProperty(key).orEmpty().trim().removeSurrounding("\"")
-    if (value.isEmpty()) logger.warn("w: $key is not set in .env, API requests will fail")
+    if (required && value.isEmpty()) logger.warn("w: $key is not set in .env, API requests will fail")
     return "\"$value\""
 }
 
@@ -31,6 +31,8 @@ android {
 
         buildConfigField("String", "INTRA_CLIENT_ID", envString("INTRA_CLIENT_ID"))
         buildConfigField("String", "INTRA_CLIENT_SECRET", envString("INTRA_CLIENT_SECRET"))
+        // Optional, comma-separated: logins answered as nonexistent, kept out of git with the credentials.
+        buildConfigField("String", "BLOCKED_LOGINS", envString("BLOCKED_LOGINS", required = false))
     }
 
     buildTypes {

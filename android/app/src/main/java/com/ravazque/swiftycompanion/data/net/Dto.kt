@@ -76,8 +76,12 @@ data class TitleUserDto(@SerialName("title_id") val titleId: Int, val selected: 
 
 @Serializable
 data class CoalitionDto(
+    val id: Int = 0,
     val name: String,
     val slug: String = "",
     val color: String? = null,
     @SerialName("image_url") val imageUrl: String? = null,
 )
+
+@Serializable
+data class CoalitionUserDto(@SerialName("coalition_id") val coalitionId: Int, val score: Int = 0)

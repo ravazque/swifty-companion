@@ -56,9 +56,11 @@ import androidx.compose.ui.unit.em
 import androidx.core.graphics.toColorInt
 import coil3.compose.AsyncImage
 import com.ravazque.swiftycompanion.R
+import com.ravazque.swiftycompanion.model.Coalition
 import com.ravazque.swiftycompanion.model.Cursus
 import com.ravazque.swiftycompanion.model.Profile
 import com.ravazque.swiftycompanion.model.ProfileKind
+import com.ravazque.swiftycompanion.model.compactScore
 import com.ravazque.swiftycompanion.ui.profile.previewProfile
 import com.ravazque.swiftycompanion.ui.theme.CardBottom
 import com.ravazque.swiftycompanion.ui.theme.Blue
@@ -168,10 +170,12 @@ private fun ColumnScope.CardFront(profile: Profile, cursus: Cursus?, accent: Col
     FlipHint(scale, Modifier.align(Alignment.End))
 }
 
+// The piscine view shows no coalition: neither its logo, its color nor its score.
+private fun Profile.coalitionIn(cursus: Cursus?): Coalition? = coalition?.takeUnless { cursus?.isPiscine == true }
+
 // The piscine and profiles without a coalition use the neutral blue; the rest, their coalition's color.
 fun Profile.accentFor(cursus: Cursus?): Color =
-    coalition?.takeUnless { cursus?.isPiscine == true }?.color
-        ?.let { runCatching { Color(it.toColorInt()) }.getOrNull() } ?: Blue
+    coalitionIn(cursus)?.color?.let { runCatching { Color(it.toColorInt()) }.getOrNull() } ?: Blue
 
 @Composable
 private fun CardHead(profile: Profile, cursus: Cursus?, accent: Color, scale: CardScale) {
@@ -186,7 +190,7 @@ private fun CardHead(profile: Profile, cursus: Cursus?, accent: Color, scale: Ca
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(scale.dp(0.6f)),
         ) {
-            profile.coalition?.takeUnless { cursus?.isPiscine == true }?.let { coalition ->
+            profile.coalitionIn(cursus)?.let { coalition ->
                 AsyncImage(
                     model = coalition.imageUrl,
                     contentDescription = null,
@@ -304,6 +308,12 @@ private fun Stats(profile: Profile, cursus: Cursus?, scale: CardScale) {
         )
         StatBox(stringResource(R.string.label_wallet), profile.wallet.toString(), scale, Modifier.weight(1f), currency = true)
         StatBox(stringResource(R.string.label_points), profile.correctionPoints.toString(), scale, Modifier.weight(1f))
+        StatBox(
+            label = stringResource(R.string.label_coalition),
+            value = profile.coalitionIn(cursus)?.score?.let { compactScore(it, locale) } ?: "—",
+            scale = scale,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 

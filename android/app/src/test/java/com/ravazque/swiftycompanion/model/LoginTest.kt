@@ -22,4 +22,10 @@ class LoginTest {
             assertThrows(AppError.InvalidLogin::class.java) { normalizeLogin(input) }
         }
     }
+
+    @Test
+    fun loginListsAreTrimmedLowercasedAndSkipEmptyEntries() {
+        assertEquals(setOf("jdoe", "j-doe_2"), loginList(" JDoe, j-doe_2 ,, jdoe,"))
+        assertEquals(emptySet<String>(), loginList(""))
+    }
 }

@@ -22,8 +22,12 @@ Built with Kotlin and Jetpack Compose.
 - Profile card: coalition logo and name, level tag, photo inside a ring that
   fills with the progress towards the next level, full name, login, grade,
   selected title, the workstation the user is logged in at (or "Offline")
-  centered under the name, level, wallet and correction points. The card keeps
-  its proportions on every screen size, and its layout does not move when the
+  centered under the name, level, wallet, correction points and the user's own
+  score in their coalition. The score is shown as it is up to 999 and in
+  thousands with one decimal from 1000 on (41337 is 41.3k, cut rather than
+  rounded, with the decimal separator of the language); it can be negative,
+  and it shows "—" in the piscine or without a coalition. The card keeps its
+  proportions on every screen size, and its layout does not move when the
   cursus or the location changes.
 - Tapping the card flips it to the back, a radar chart of the skills in the
   selected cursus on the intra's 0-21 scale. The main cursus always shows its
@@ -47,16 +51,19 @@ Built with Kotlin and Jetpack Compose.
   its mark, its status in color (passed, failed, in progress, waiting for
   correction, searching group, creating group) and the date it was graded. Two
   menus filter by status, with how many projects have each one, and sort by
-  date, grade or name.
+  date, grade or name. The chosen filter and order belong to the kind of
+  profile: students; transcenders and alumni together; staff; blackholed.
+  Opening another profile of the same group keeps them, and they are kept
+  across restarts.
 - Adaptive layout: one scrolling column on phones in portrait; from 600 dp
   wide (tablets, phones in landscape, unfolded foldables) the card, level and
   details sit on the left and the projects on the right, each pane with its
   own scroll. The top bar scrolls away with the content and comes back on the
   first scroll up, which matters on short screens. Content stays clear of the
   system bars and display cutouts.
-- The selected cursus, project filter and order, the side of the card and the
-  text typed in the search are kept when the screen rotates, when the layout
-  changes and when Android closes the app in the background.
+- The selected cursus, the side of the card and the text typed in the search
+  are kept when the screen rotates, when the layout changes and when Android
+  closes the app in the background.
 - Refresh from the profile; back to the search with the top bar arrow or the
   system back gesture.
 - One access token reused across requests and app restarts, renewed before it
@@ -236,7 +243,9 @@ does not change after these actions.
   their mark), which is why the grade comes first for them.
 - **Hidden profiles**: the repository classifies the profile right after the
   user request and stops there if it is hidden, so a hidden profile costs one
-  request. Visible ones also fetch the coalitions and keep the main cursus one.
+  request. Visible ones also fetch the coalitions, keep the main cursus one and
+  then fetch the user's score in it (`coalitions_users`). If either call fails
+  the profile still shows, without the coalition or without the score.
 - **Language**: on Android 13 and newer the switch sets the app language
   through the system's `LocaleManager`; on older versions the choice is kept
   in preferences and applied when the activity starts. Every language ships
@@ -249,10 +258,12 @@ does not change after these actions.
   text stays readable on short screens. That height is measured as if the top
   bar were fully shown, so the card keeps its size while the bar scrolls away.
   Both layouts share the same composables.
-- **Screen state**: the selected cursus, project filter and order, and card side
-  live in the profile ViewModel and in its `SavedStateHandle`, which Android
-  restores after closing the app in the background. Since they do not live in
-  the composables, switching between the one and two pane layouts keeps them.
+- **Screen state**: the selected cursus and card side live in the profile
+  ViewModel and in its `SavedStateHandle`, which Android restores after closing
+  the app in the background. The project filter and order are saved in the
+  app's private preferences under the profile's group and read whenever a
+  profile of that group opens. Since none of them live in the composables,
+  switching between the one and two pane layouts keeps them.
 
 ## Project structure
 
@@ -283,11 +294,12 @@ replay after a 401, rejected credentials, an unreadable token answer, both
 inspector actions, error mapping (404, 429, 5xx, malformed JSON, no
 connection), hidden profiles (not started, and staff and blackholed with every
 combination of the search options) without extra requests, which coalition is
-kept, the
+kept and the user's score in it (also when that call fails), the compact
+score format, the
 alumni deadline (date, pause by an open work experience, who has one), JSON to model
 mapping (including project status and order), the profile kind rules, cursus
 selection, the axes of the main and piscine charts, the projects of each
 cursus with their filter and sort orders, login validation, and restoring the
-search text, the selected cursus, project filter and order, and card side
-after Android kills the app process, and keeping the search options for the
-next launch.
+search text, the selected cursus and card side after Android kills the app
+process, sharing the project filter and order within each group of profiles,
+and keeping the search options for the next launch.

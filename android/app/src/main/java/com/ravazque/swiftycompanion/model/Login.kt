@@ -9,3 +9,6 @@ fun normalizeLogin(input: String): String {
     if (!LOGIN_PATTERN.matches(login)) throw AppError.InvalidLogin
     return login
 }
+
+// A comma-separated list of logins, such as BLOCKED_LOGINS in .env: trimmed, lowercased, empty entries dropped.
+fun loginList(raw: String): Set<String> = raw.split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()

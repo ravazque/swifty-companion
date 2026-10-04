@@ -264,8 +264,8 @@ private fun LazyListScope.projects(
     modifier: Modifier,
 ) = projectItems(
     projects = profile.projectsOf(cursus),
-    filter = state.projectFilter,
-    sort = state.projectSort,
+    filter = state.projectView.filter,
+    sort = state.projectView.sort,
     accent = accent,
     onSelectFilter = actions.onSelectProjectFilter,
     onSelectSort = actions.onSelectProjectSort,
