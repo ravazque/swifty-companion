@@ -39,6 +39,7 @@ class UserRepository(private val api: IntraApi, private val tokens: TokenManager
 private fun Exception.toAppError(login: String): AppError = when (this) {
     is AppError -> this
     is TokenException -> when (code) {
+        null -> AppError.UnexpectedResponse
         400, 401 -> AppError.Unauthorized
         429 -> AppError.RateLimited
         else -> AppError.Server(code)

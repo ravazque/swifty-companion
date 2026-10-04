@@ -53,6 +53,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.AppError
 import com.ravazque.swiftycompanion.ui.components.ErrorPanel
+import com.ravazque.swiftycompanion.ui.debug.TokenInspectorButton
 import com.ravazque.swiftycompanion.ui.components.isInputError
 import com.ravazque.swiftycompanion.ui.components.message
 import com.ravazque.swiftycompanion.ui.theme.SwiftyTheme
@@ -107,6 +108,7 @@ fun SearchContent(
                     SearchForm(state, onQueryChange, onSearch)
                 }
             }
+            TokenInspectorButton(Modifier.align(Alignment.TopEnd).padding(8.dp))
         }
     }
 }

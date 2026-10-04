@@ -14,5 +14,6 @@ class AppContainer(context: Context) {
         store = PrefsTokenStore(context.getSharedPreferences("auth", Context.MODE_PRIVATE)),
     )
 
-    val repository = UserRepository(client.api, client.tokens)
+    val tokens = client.tokens
+    val repository = UserRepository(client.api, tokens)
 }

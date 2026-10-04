@@ -2,6 +2,7 @@ package com.ravazque.swiftycompanion
 
 import com.ravazque.swiftycompanion.data.UserRepository
 import com.ravazque.swiftycompanion.data.auth.Token
+import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.data.auth.TokenStore
 import com.ravazque.swiftycompanion.data.net.ApiClient
 import com.ravazque.swiftycompanion.model.AppError
@@ -42,12 +43,17 @@ class FakeIntra : Closeable {
         server.start()
     }
 
+    // Token manager of the last repository built.
+    lateinit var tokens: TokenManager
+        private set
+
     fun repository(
         store: TokenStore = MemoryStore(),
         clock: () -> Long = { 0L },
         clientId: String = "id",
     ): UserRepository {
         val client = ApiClient(server.url("/").toString(), clientId, "secret", store, clock, sleep = { sleeps += it })
+        tokens = client.tokens
         return UserRepository(client.api, client.tokens)
     }
 

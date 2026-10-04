@@ -53,4 +53,19 @@
     <string name="status_validated">Validated</string>
     <string name="status_failed">Failed</string>
     <string name="status_in_progress">In progress</string>
+
+    <string name="inspector_title">Access token</string>
+    <string name="inspector_token">Token</string>
+    <string name="inspector_expires">Expires in</string>
+    <string name="inspector_expired">Expired</string>
+    <string name="inspector_none">None</string>
+    <string name="inspector_api_requests">API requests</string>
+    <string name="inspector_token_requests">Token requests</string>
+    <string name="inspector_last_renewal">Last renewal</string>
+    <string name="inspector_reason_proactive">%1$s · before expiry</string>
+    <string name="inspector_reason_after_401">%1$s · after a 401</string>
+    <string name="inspector_counters_note">Counters since the app started. The token is kept across restarts.</string>
+    <string name="inspector_expire">Expire now</string>
+    <string name="inspector_corrupt">Corrupt token</string>
+    <string name="inspector_hint">Then search or refresh: the next request renews the token and still gets its answer.</string>
 </resources>

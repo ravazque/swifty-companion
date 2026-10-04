@@ -3,7 +3,11 @@ package com.ravazque.swiftycompanion.data.auth
 import android.content.SharedPreferences
 import androidx.core.content.edit
 
-data class Token(val value: String, val expiresAt: Long)
+data class Token(val value: String, val expiresAt: Long) {
+    // Enough to tell two tokens apart without revealing either.
+    val fingerprint: String
+        get() = if (value.length >= 12) "${value.take(4)}…${value.takeLast(4)}" else "…"
+}
 
 interface TokenStore {
     fun load(): Token?

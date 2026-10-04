@@ -44,6 +44,10 @@ Built with Kotlin and Jetpack Compose.
   system back gesture.
 - One access token reused across requests and app restarts, renewed before it
   expires and again if the server rejects it.
+- Token inspector in debug builds (lock icon in the top bar): token
+  fingerprint, time left, how many API requests and token requests the app has
+  made, the last renewal and its cause, and two buttons that expire or corrupt
+  the stored token to exercise both renewal paths.
 - English and Spanish, following the system language.
 
 ## Repository layout
@@ -116,8 +120,29 @@ cd android
    top filter by status.
 5. Go back with the arrow in the top bar or the system back gesture.
 
-Filter Logcat by the tag `Auth` to see when the access token is reused or
-renewed. The token itself is never logged.
+Filter Logcat by the tag `SwiftyAuth` to see when the access token is reused
+or renewed. The token itself is never logged.
+
+### Token inspector (debug builds)
+
+The lock icon at the top of both screens opens the token inspector:
+
+- **Token**: the first and last four characters of the access token.
+- **Expires in**: time left before the token expires.
+- **API requests** and **Token requests**: counted since the app started. Many
+  API requests share one token request; after a restart the stored token is
+  reused, so token requests can stay at zero.
+- **Last renewal**: when the token was last requested and why: before expiry,
+  or after the server answered 401.
+- **Expire now** marks the stored token as expired: the next search or refresh
+  asks for a token before sending the request.
+- **Corrupt token** replaces the stored token with an invalid one: the next
+  request is rejected with a 401, the app asks for a token and replays the
+  request, and the profile still loads.
+
+While the old token is still valid on the server, the API answers a token
+request with that same token and its remaining lifetime, so the fingerprint
+does not change after these actions.
 
 ## How it works
 
@@ -137,7 +162,9 @@ renewed. The token itself is never logged.
 - **Rate limit**: requests are spaced to stay under 2 per second, and a 429
   answer is retried after the delay the server asks for.
 - **Errors**: every failure is mapped to a typed `AppError` with its own
-  translated message.
+  translated message. Token request failures are raised as `IOException`s,
+  the only kind OkHttp reports from inside an interceptor, so not even an
+  unreadable token answer can crash the app.
 - **Profile card**: drawn with Compose layouts and a `Canvas` for the level ring.
   Every size inside the card is a multiple of one unit (card width / 32), so the
   card scales as one piece; its text intentionally ignores the system font
@@ -178,6 +205,7 @@ android/
     data/auth/                                      token storage, renewal, interceptor, authenticator
     data/net/                                       Retrofit interface, JSON models, HTTP client, rate limit
     ui/                                             navigation, theme, search screen
+    ui/debug/                                       token inspector (debug builds only)
     ui/profile/                                     profile screen, cursus selector, tabs, level panel, details, skills, projects
     ui/profile/card/                                profile card (front, back, flip), level ring and skills radar
   app/src/test/                                     unit tests and a local fake of the API
@@ -189,8 +217,9 @@ android/
 use a local HTTP server that imitates the token and user endpoints, so they go
 through the real OkHttp and Retrofit stack without touching the API. They
 cover token reuse, reuse after a restart, renewal before expiry, renewal and
-replay after a 401, rejected credentials, error mapping (404, 429, 5xx,
-malformed JSON, no connection), JSON to model mapping (including project
+replay after a 401, rejected credentials, an unreadable token answer, both
+inspector actions, error mapping (404, 429, 5xx, malformed JSON, no
+connection), JSON to model mapping (including project
 status and order), cursus selection, the axes of the skills chart, grouping and
 filtering projects by cursus and status, login validation, and restoring the
 search text, the selected cursus, tab, filter and card side after Android

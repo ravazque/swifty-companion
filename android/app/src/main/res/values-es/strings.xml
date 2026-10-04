@@ -51,4 +51,19 @@
     <string name="status_validated">Validado</string>
     <string name="status_failed">Fallido</string>
     <string name="status_in_progress">En curso</string>
+
+    <string name="inspector_title">Token de acceso</string>
+    <string name="inspector_token">Token</string>
+    <string name="inspector_expires">Caduca en</string>
+    <string name="inspector_expired">Caducado</string>
+    <string name="inspector_none">Ninguno</string>
+    <string name="inspector_api_requests">Peticiones a la API</string>
+    <string name="inspector_token_requests">Peticiones de token</string>
+    <string name="inspector_last_renewal">Última renovación</string>
+    <string name="inspector_reason_proactive">%1$s · antes de caducar</string>
+    <string name="inspector_reason_after_401">%1$s · tras un 401</string>
+    <string name="inspector_counters_note">Contadores desde que se abrió la app. El token se conserva al reiniciarla.</string>
+    <string name="inspector_expire">Expirar ahora</string>
+    <string name="inspector_corrupt">Corromper token</string>
+    <string name="inspector_hint">Después busca o actualiza: la siguiente petición renueva el token y aun así obtiene su respuesta.</string>
 </resources>

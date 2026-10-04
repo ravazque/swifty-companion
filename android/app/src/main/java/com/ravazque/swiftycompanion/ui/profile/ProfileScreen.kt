@@ -57,6 +57,7 @@ import com.ravazque.swiftycompanion.model.Cursus
 import com.ravazque.swiftycompanion.model.Profile
 import com.ravazque.swiftycompanion.model.ProjectStatus
 import com.ravazque.swiftycompanion.ui.components.ErrorPanel
+import com.ravazque.swiftycompanion.ui.debug.TokenInspectorButton
 import com.ravazque.swiftycompanion.ui.profile.card.CARD_RATIO
 import com.ravazque.swiftycompanion.ui.profile.card.ProfileCard
 import com.ravazque.swiftycompanion.ui.profile.card.accentColor
@@ -115,6 +116,7 @@ fun ProfileContent(
                     }
                 },
                 actions = {
+                    TokenInspectorButton()
                     IconButton(onClick = actions.onRefresh, enabled = !state.loading) {
                         Icon(Icons.Default.Refresh, stringResource(R.string.action_refresh))
                     }

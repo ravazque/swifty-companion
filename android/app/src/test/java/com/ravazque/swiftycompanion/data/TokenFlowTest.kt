@@ -3,6 +3,8 @@ package com.ravazque.swiftycompanion.data
 import com.ravazque.swiftycompanion.FakeIntra
 import com.ravazque.swiftycompanion.MINIMAL_USER
 import com.ravazque.swiftycompanion.MemoryStore
+import com.ravazque.swiftycompanion.data.auth.RenewalReason
+import com.ravazque.swiftycompanion.data.auth.Token
 import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.failureOf
 import com.ravazque.swiftycompanion.json
@@ -76,6 +78,49 @@ class TokenFlowTest {
 
         assertEquals(AppError.Unauthorized, failureOf { intra.repository().fetch("jdoe") })
         assertEquals(0, intra.userAuthHeaders.size)
+    }
+
+    @Test
+    fun unreadableTokenAnswerIsAnUnexpectedResponse() = runTest {
+        intra.tokenResponse = { json(200, "<html>maintenance</html>") }
+
+        assertEquals(AppError.UnexpectedResponse, failureOf { intra.repository().fetch("jdoe") })
+        assertEquals(0, intra.userAuthHeaders.size)
+    }
+
+    @Test
+    fun expireNowSendsTheNextRequestThroughTheProactiveRenewal() = runTest {
+        val repository = intra.repository()
+        repository.fetch("jdoe")
+        intra.tokens.expireNow()
+        repository.fetch("jdoe")
+
+        assertEquals(2, intra.tokenRequests.get())
+        assertEquals(listOf("Bearer t1", "Bearer t2"), intra.userAuthHeaders)
+        val info = intra.tokens.info.value
+        assertEquals(RenewalReason.PROACTIVE, info.lastRenewal?.reason)
+        assertEquals(2, info.tokenRequests)
+        assertEquals(4, info.apiRequests)
+    }
+
+    @Test
+    fun corruptSendsTheNextRequestThroughThe401Path() = runTest {
+        intra.userResponse = { request, _ ->
+            if (request.headers["Authorization"]!!.startsWith("Bearer t")) json(200, MINIMAL_USER) else json(401, "{}")
+        }
+        val repository = intra.repository()
+        repository.fetch("jdoe")
+        intra.tokens.corrupt()
+
+        assertEquals("jdoe", repository.fetch("jdoe").login)
+        assertEquals(listOf("Bearer t1", "Bearer 00", "Bearer t2"), intra.userAuthHeaders)
+        assertEquals(RenewalReason.AFTER_401, intra.tokens.info.value.lastRenewal?.reason)
+    }
+
+    @Test
+    fun fingerprintNeverRevealsTheToken() {
+        assertEquals("abcd…mnop", Token("abcdefghijklmnop", 0).fingerprint)
+        assertEquals("…", Token("t1", 0).fingerprint)
     }
 
     @Test
