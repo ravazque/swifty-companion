@@ -2,6 +2,7 @@ package com.ravazque.swiftycompanion.data.net
 
 import com.ravazque.swiftycompanion.data.auth.AuthApi
 import com.ravazque.swiftycompanion.data.auth.AuthInterceptor
+import com.ravazque.swiftycompanion.data.auth.MeApi
 import com.ravazque.swiftycompanion.data.auth.TokenAuthenticator
 import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.data.auth.TokenStore
@@ -27,8 +28,12 @@ class ApiClient(
         .addInterceptor(RateLimitInterceptor(sleep = sleep))
         .build()
 
+    // Without the auth interceptor: the token endpoint and /v2/me with the signed-in user's token.
+    val auth: AuthApi = retrofit(baseUrl, baseClient).create(AuthApi::class.java)
+    val me: MeApi = retrofit(baseUrl, baseClient).create(MeApi::class.java)
+
     val tokens = TokenManager(
-        api = retrofit(baseUrl, baseClient).create(AuthApi::class.java),
+        api = auth,
         store = store,
         clientId = clientId,
         clientSecret = clientSecret,

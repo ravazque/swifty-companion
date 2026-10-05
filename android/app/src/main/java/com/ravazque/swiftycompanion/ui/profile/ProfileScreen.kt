@@ -66,8 +66,11 @@ import com.ravazque.swiftycompanion.ui.profile.card.accentFor
 import com.ravazque.swiftycompanion.ui.theme.SwiftyTheme
 
 // Below 600 dp one scrolling column; from 600 dp (tablets, phones in landscape) the card and
-// details on the left and the projects on the right, each pane with its own scroll.
+// details on the left and the projects on the right, each pane with its own scroll. On wide
+// screens both panes stay together in the middle, so no empty strip belongs to the project list.
 private val TwoPaneMinWidth = 600.dp
+private val PaneGap = 24.dp
+private val PanePadding = 16.dp
 private val CardMinWidth = 300.dp
 private val CardMaxWidth = 440.dp
 private val ListMaxWidth = 720.dp
@@ -173,7 +176,7 @@ private fun ProfileBody(profile: Profile, state: ProfileUiState, actions: Profil
                     modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp).widthIn(max = CardMaxWidth),
                 )
             }
-            Box(Modifier.weight(1f)) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 if (twoPanes) {
                     TwoPanes(profile, cursus, accent, state, actions, sideWidth, sideScroll, projectList)
                 } else {
@@ -217,7 +220,13 @@ private fun TwoPanes(
     sideScroll: ScrollState,
     listState: LazyListState,
 ) {
-    Row(Modifier.fillMaxSize().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+    Row(
+        modifier = Modifier
+            .widthIn(max = sideWidth + PaneGap + ListMaxWidth + PanePadding * 2)
+            .fillMaxSize()
+            .padding(horizontal = PanePadding),
+        horizontalArrangement = Arrangement.spacedBy(PaneGap),
+    ) {
         Overview(
             profile = profile,
             cursus = cursus,
@@ -233,7 +242,7 @@ private fun TwoPanes(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            projects(profile, cursus, accent, state, actions, Modifier.widthIn(max = ListMaxWidth).fillMaxWidth())
+            projects(profile, cursus, accent, state, actions, Modifier.fillMaxWidth())
         }
     }
 }

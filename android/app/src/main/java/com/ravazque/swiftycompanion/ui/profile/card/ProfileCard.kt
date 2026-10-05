@@ -348,6 +348,7 @@ private val ProfileKind.tag: Int?
         ProfileKind.STAFF -> R.string.card_staff
         ProfileKind.ALUMNI -> R.string.card_alumni
         ProfileKind.BLACKHOLED -> R.string.card_blackholed
+        ProfileKind.FROZEN -> R.string.card_frozen
         ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.PISCINER -> null
     }
 

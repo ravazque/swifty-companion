@@ -13,6 +13,7 @@
     <string name="error_not_found">No existe ningún usuario con el login %1$s</string>
     <string name="error_hidden_staff">%1$s es staff.\nActiva Staff abajo para ver los perfiles de staff.</string>
     <string name="error_hidden_pisciner">%1$s aún no ha empezado el cursus.\nLos perfiles de piscina no se muestran.</string>
+    <string name="error_hidden_frozen">%1$s está en freeze.\nActiva Freeze abajo para ver estos perfiles.</string>
     <string name="error_hidden_blackholed">%1$s está en el agujero negro.\nActiva Blackholed abajo para ver estos perfiles.</string>
     <string name="error_network">Sin conexión. Revisa la red e inténtalo de nuevo.</string>
     <string name="error_rate_limited">Demasiadas peticiones. Espera un momento e inténtalo de nuevo.</string>
@@ -21,6 +22,9 @@
     <string name="error_forbidden">La API ha rechazado la petición.</string>
     <string name="error_server">El servidor ha devuelto un error (%1$d). Inténtalo más tarde.</string>
     <string name="error_unexpected">Respuesta inesperada del servidor.</string>
+    <string name="error_login_cancelled">Has cancelado el inicio de sesión. Vuelve a buscar para entrar.</string>
+    <string name="error_login_failed">No se pudo iniciar sesión con 42. Vuelve a buscar para reintentar.</string>
+    <string name="error_no_browser">No hay ningún navegador para abrir la página de inicio de sesión de 42.</string>
 
     <string name="profile_pool">Piscina</string>
     <string name="profile_kickoff">Kickoff</string>
@@ -33,6 +37,7 @@
     <string name="card_staff">Staff</string>
     <string name="card_alumni">Alumni</string>
     <string name="card_blackholed">Blackholed</string>
+    <string name="card_frozen">Freeze</string>
     <string name="label_level">Nivel</string>
     <string name="label_wallet">Wallet</string>
     <string name="label_points">Puntos</string>
@@ -84,4 +89,45 @@
     <string name="inspector_expire">Expirar ahora</string>
     <string name="inspector_corrupt">Corromper token</string>
     <string name="inspector_hint">Después busca o actualiza: la siguiente petición renueva el token y aun así obtiene su respuesta.</string>
+
+    <string name="action_cancel">Cancelar</string>
+    <string name="account_signed_in">Sesión iniciada como %1$s</string>
+    <string name="account_sign_out">Cerrar sesión</string>
+    <string name="consent_title">Inicia sesión para buscar</string>
+    <string name="consent_body">Swifty Companion es solo para la comunidad de 42. Para buscar perfiles, inicia sesión con tu cuenta de la intra. La contraseña se escribe en la propia página de la intra: la app nunca la ve y solo guarda tu login en este dispositivo.</string>
+    <string name="consent_check">He leído y acepto los términos de uso y la política de privacidad.</string>
+    <string name="consent_accept">Iniciar sesión con 42</string>
+    <string name="legal_terms_title">Términos de uso</string>
+    <string name="legal_privacy_title">Política de privacidad</string>
+    <string name="legal_updated">Última actualización: 5 de octubre de 2026</string>
+    <string name="terms_app_title">La app</string>
+    <string name="terms_app_body">Swifty Companion permite a la comunidad de 42 consultar perfiles de estudiantes de 42 a través de la API de 42. Es un proyecto personal y sin ánimo de lucro de ravazque, estudiante de 42 Madrid, y no es un producto oficial de 42.</string>
+    <string name="terms_who_title">Quién puede usarla</string>
+    <string name="terms_who_body">Solo personas con cuenta en la intra de 42. Debes iniciar sesión con tu propia cuenta y no compartirla.</string>
+    <string name="terms_use_title">Uso aceptable</string>
+    <string name="terms_use_body">Usa la app solo para fines relacionados con 42, como encontrar a otros estudiantes o ver cómo avanza alguien. No la uses para recopilar, copiar, publicar o compartir datos de otras personas, para acosar a nadie ni con fines comerciales. Sigue las normas de 42 y respeta la privacidad de los demás.</string>
+    <string name="terms_data_title">Los datos</string>
+    <string name="terms_data_body">Todos los datos de los perfiles vienen de la API de 42 y pertenecen a 42 y a las personas a las que describen. La app puede presentarlos de forma distinta a la intra: por ejemplo, si alguien está en freeze o en el agujero negro se deduce de la API y puede no ser exacto.</string>
+    <string name="terms_warranty_title">Sin garantías</string>
+    <string name="terms_warranty_body">La app se ofrece tal cual, sin ninguna garantía, y puede dejar de funcionar si 42 cambia su API o sus normas para aplicaciones.</string>
+    <string name="terms_stop_title">Dejar de usarla</string>
+    <string name="terms_stop_body">Puedes dejar de usar la app cuando quieras cerrando sesión o desinstalándola.</string>
+    <string name="terms_changes_title">Cambios</string>
+    <string name="terms_changes_body">Si estos términos cambian, la app te pedirá aceptar la nueva versión antes de tu siguiente búsqueda.</string>
+    <string name="privacy_who_title">Responsable</string>
+    <string name="privacy_who_body">Swifty Companion es una app personal y sin ánimo de lucro creada por ravazque, estudiante de 42 Madrid. No tiene servidor propio: funciona en tu dispositivo y solo se comunica con 42. Para cualquier duda sobre esta política, contacta con ravazque a través de la intra de 42.</string>
+    <string name="privacy_sign_in_title">Inicio de sesión</string>
+    <string name="privacy_sign_in_body">Inicias sesión en la propia página de la intra de 42, así que la app nunca ve tu contraseña. Después la intra le da a la app una clave temporal de tu cuenta, que usa una sola vez para leer tu login y luego descarta. En este dispositivo la app solo guarda tu login, la versión de estos textos que aceptaste y cuándo, para recordar tu sesión.</string>
+    <string name="privacy_profiles_title">Perfiles que consultas</string>
+    <string name="privacy_profiles_body">Los perfiles que se muestran (nombre, login, foto, ubicación, wallet, puntos de corrección, nivel, skills, proyectos y coalición) vienen de la API de 42: son los mismos datos que muestra la intra. Se guardan en memoria mientras la app está abierta, y las fotos y los logos de las coaliciones también en la caché de imágenes de la app. La app no los envía a ningún sitio.</string>
+    <string name="privacy_device_title">Qué se guarda en este dispositivo</string>
+    <string name="privacy_device_body">En el almacenamiento privado de la app, que otras apps no pueden leer y que no entra en las copias de seguridad: tu sesión mientras la tengas iniciada, la clave propia de la app para la API de 42, tus ajustes (idioma, opciones de búsqueda, filtro y orden de proyectos) y la caché de imágenes.</string>
+    <string name="privacy_not_title">Qué no hace la app</string>
+    <string name="privacy_not_body">No tiene analíticas, publicidad, seguimiento ni cuentas propias. Los únicos servicios con los que se comunica son la API de 42 y los servidores de imágenes de 42.</string>
+    <string name="privacy_why_title">Para qué</string>
+    <string name="privacy_why_body">Los datos se usan solo para que la comunidad de 42 pueda consultar perfiles de 42, igual que en la intra. El inicio de sesión asegura que solo usan la app personas con cuenta de 42.</string>
+    <string name="privacy_choices_title">Tus opciones</string>
+    <string name="privacy_choices_body">Puedes cerrar sesión cuando quieras desde tu login, arriba en la pantalla de búsqueda; tu sesión se borra entonces de este dispositivo. Borrar los datos de la app o desinstalarla elimina todo lo que guardó. Tu perfil de 42 lo gestiona 42: para acceder a esos datos, corregirlos o borrarlos, contacta con tu campus.</string>
+    <string name="privacy_changes_title">Cambios</string>
+    <string name="privacy_changes_body">Si esta política cambia, la app te pedirá aceptar la nueva versión antes de tu siguiente búsqueda.</string>
 </resources>

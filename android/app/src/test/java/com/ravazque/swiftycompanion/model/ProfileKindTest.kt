@@ -13,15 +13,14 @@ class ProfileKindTest {
         grade: String? = "Cadet",
         beginAt: Instant? = past,
         endAt: Instant? = null,
-        blackholedAt: Instant? = future,
-    ) = Cursus(21, "42cursus", Cursus.MAIN_SLUG, 3.0, grade, emptyList(), beginAt, endAt, blackholedAt)
+    ) = Cursus(21, "42cursus", Cursus.MAIN_SLUG, 3.0, grade, emptyList(), beginAt, endAt)
 
-    private fun kind(main: Cursus?, staff: Boolean = false, alumni: Boolean = false) = profileKind(staff, alumni, main, now)
+    private fun kind(main: Cursus?, staff: Boolean = false, alumni: Boolean = false, active: Boolean = true) =
+        profileKind(staff, alumni, active, main, now)
 
     @Test
     fun activeStudentsAndTranscenders() {
         assertEquals(ProfileKind.STUDENT, kind(main()))
-        assertEquals(ProfileKind.STUDENT, kind(main(blackholedAt = null)))
         assertEquals(ProfileKind.TRANSCENDER, kind(main(grade = "Transcender")))
     }
 
@@ -34,10 +33,18 @@ class ProfileKindTest {
     }
 
     @Test
-    fun aClosedCursusOrAPastBlackHoleIsBlackholed() {
+    fun aClosedCursusIsBlackholed() {
         assertEquals(ProfileKind.BLACKHOLED, kind(main(endAt = past)))
-        assertEquals(ProfileKind.BLACKHOLED, kind(main(blackholedAt = past)))
-        assertEquals(ProfileKind.BLACKHOLED, kind(main(grade = "Transcender", blackholedAt = past)))
+        assertEquals(ProfileKind.BLACKHOLED, kind(main(grade = "Transcender", endAt = past)))
+        assertEquals(ProfileKind.STUDENT, kind(main(endAt = future)))
+    }
+
+    @Test
+    fun anInactiveAccountWithAnOpenCursusIsOnFreeze() {
+        assertEquals(ProfileKind.FROZEN, kind(main(), active = false))
+        assertEquals(ProfileKind.FROZEN, kind(main(grade = "Transcender"), active = false))
+        assertEquals(ProfileKind.BLACKHOLED, kind(main(endAt = past), active = false))
+        assertEquals(ProfileKind.PISCINER, kind(null, active = false))
     }
 
     @Test
@@ -46,6 +53,8 @@ class ProfileKindTest {
         assertEquals(ProfileKind.STAFF, kind(null, staff = true))
         assertEquals(ProfileKind.ALUMNI, kind(main(endAt = past), alumni = true))
         assertEquals(ProfileKind.ALUMNI, kind(main(grade = "Alumni", endAt = past)))
+        assertEquals(ProfileKind.STAFF, kind(main(), staff = true, active = false))
+        assertEquals(ProfileKind.ALUMNI, kind(main(), alumni = true, active = false))
     }
 
     @Test
@@ -57,5 +66,10 @@ class ProfileKindTest {
         assertEquals(always + ProfileKind.STAFF, shown(Visibility(staff = true)))
         assertEquals(always + ProfileKind.BLACKHOLED, shown(Visibility(blackholed = true)))
         assertEquals(always + ProfileKind.STAFF + ProfileKind.BLACKHOLED, shown(Visibility(staff = true, blackholed = true)))
+        assertEquals(always + ProfileKind.FROZEN, shown(Visibility(frozen = true)))
+        assertEquals(
+            always + ProfileKind.STAFF + ProfileKind.BLACKHOLED + ProfileKind.FROZEN,
+            shown(Visibility(staff = true, blackholed = true, frozen = true)),
+        )
     }
 }

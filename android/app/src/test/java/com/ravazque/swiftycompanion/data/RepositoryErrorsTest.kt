@@ -96,6 +96,16 @@ class RepositoryErrorsTest {
     }
 
     @Test
+    fun frozenProfilesFollowTheirOwnSearchOption() = runTest {
+        intra.userResponse = { _, _ -> json(200, FROZEN_USER) }
+        val others = intra.repository(visibility = Visibility(staff = true, blackholed = true))
+
+        assertEquals(AppError.Hidden("away", ProfileKind.FROZEN), failureOf { others.fetch("away") })
+        assertEquals(1, intra.server.requestCount - intra.tokenRequests.get())
+        assertEquals(ProfileKind.FROZEN, intra.repository(visibility = Visibility(frozen = true)).fetch("away").kind)
+    }
+
+    @Test
     fun theMainCursusCoalitionAndItsScoreAreAddedToTheProfile() = runTest {
         intra.coalitions = """[{"id": 555, "name": "Corvus", "slug": "corvus", "color": "#d087ab"},
             {"id": 398, "name": "Ignisaria", "slug": "ignisaria", "color": "#C2301D"}]"""
@@ -131,4 +141,8 @@ private const val STAFF_USER = """{"id": 2, "login": "boss", "staff?": true}"""
 
 private const val BLACKHOLED_USER = """{"id": 4, "login": "gone", "cursus_users": [{"begin_at": "2026-05-18T07:42:00.000Z",
     "end_at": "2026-07-03T22:01:04.781Z", "blackholed_at": "2026-08-05T07:42:00.000Z", "grade": "Cadet",
+    "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""
+
+private const val FROZEN_USER = """{"id": 5, "login": "away", "active?": false, "cursus_users": [{"begin_at": "2024-09-16T07:42:00.000Z",
+    "end_at": null, "blackholed_at": "2026-11-26T07:42:00.000Z", "grade": "Cadet",
     "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""

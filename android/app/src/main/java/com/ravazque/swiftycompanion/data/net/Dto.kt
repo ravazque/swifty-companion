@@ -26,6 +26,7 @@ data class UserDto(
     @SerialName("pool_year") val poolYear: String? = null,
     @SerialName("staff?") val staff: Boolean = false,
     @SerialName("alumni?") val alumni: Boolean = false,
+    @SerialName("active?") val active: Boolean = true,
     @SerialName("cursus_users") val cursusUsers: List<CursusUserDto> = emptyList(),
     @SerialName("projects_users") val projectsUsers: List<ProjectUserDto> = emptyList(),
     val titles: List<TitleDto> = emptyList(),
@@ -44,7 +45,6 @@ data class CursusUserDto(
     val grade: String? = null,
     @SerialName("begin_at") val beginAt: String? = null,
     @SerialName("end_at") val endAt: String? = null,
-    @SerialName("blackholed_at") val blackholedAt: String? = null,
     val cursus: CursusDto,
     val skills: List<SkillDto> = emptyList(),
 )

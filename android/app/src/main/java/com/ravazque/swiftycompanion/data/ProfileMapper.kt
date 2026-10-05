@@ -30,7 +30,7 @@ fun UserDto.toProfile(now: Instant): Profile {
         correctionPoints = correctionPoint,
         pool = pool(),
         title = selectedTitle(),
-        kind = profileKind(staff, alumni, cursus.firstOrNull { it.slug == Cursus.MAIN_SLUG }, now),
+        kind = profileKind(staff, alumni, active, cursus.firstOrNull { it.slug == Cursus.MAIN_SLUG }, now),
         cursus = cursus,
         projects = projectsUsers.map { it.toRecord() }.orderedBy(ProjectSort.DATE),
         coalition = null,
@@ -65,7 +65,6 @@ private fun CursusUserDto.toCursus() = Cursus(
     skills = skills.map { Skill(it.name, it.level) }.sortedByDescending { it.level },
     beginAt = instant(beginAt),
     endAt = instant(endAt),
-    blackholedAt = instant(blackholedAt),
 )
 
 private fun ProjectUserDto.toRecord() = ProjectRecord(

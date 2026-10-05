@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -34,20 +36,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -61,43 +66,69 @@ import com.ravazque.swiftycompanion.model.AppError
 import com.ravazque.swiftycompanion.model.Visibility
 import com.ravazque.swiftycompanion.ui.components.ErrorPanel
 import com.ravazque.swiftycompanion.ui.components.LanguageSwitch
-import com.ravazque.swiftycompanion.ui.debug.TokenInspectorButton
 import com.ravazque.swiftycompanion.ui.components.isInputError
 import com.ravazque.swiftycompanion.ui.components.message
+import com.ravazque.swiftycompanion.ui.debug.TokenInspectorButton
 import com.ravazque.swiftycompanion.ui.theme.SwiftyTheme
+import kotlinx.coroutines.launch
+
+class SearchActions(
+    val onQueryChange: (String) -> Unit = {},
+    val onSearch: () -> Unit = {},
+    val onShowStaff: (Boolean) -> Unit = {},
+    val onShowBlackholed: (Boolean) -> Unit = {},
+    val onShowFrozen: (Boolean) -> Unit = {},
+    val onSignOut: () -> Unit = {},
+    val onOpenTerms: () -> Unit = {},
+    val onOpenPrivacy: () -> Unit = {},
+)
 
 @Composable
 fun SearchScreen(
     onProfileFound: (String) -> Unit,
+    onOpenTerms: () -> Unit,
+    onOpenPrivacy: () -> Unit,
     viewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val account by viewModel.account.collectAsStateWithLifecycle()
     val currentOnProfileFound by rememberUpdatedState(onProfileFound)
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            viewModel.found.collect { currentOnProfileFound(it) }
+            launch { viewModel.found.collect { currentOnProfileFound(it) } }
+            launch { viewModel.openLogin.collect { url -> if (!openSignInPage(context, url)) viewModel.browserMissing() } }
+            launch { viewModel.redirects.collect(viewModel::completeLogin) }
         }
     }
 
-    SearchContent(
-        state = state,
-        onQueryChange = viewModel::onQueryChange,
-        onSearch = viewModel::search,
-        onShowStaff = viewModel::showStaff,
-        onShowBlackholed = viewModel::showBlackholed,
-    )
+    val actions = remember(viewModel, onOpenTerms, onOpenPrivacy) {
+        SearchActions(
+            onQueryChange = viewModel::onQueryChange,
+            onSearch = viewModel::search,
+            onShowStaff = viewModel::showStaff,
+            onShowBlackholed = viewModel::showBlackholed,
+            onShowFrozen = viewModel::showFrozen,
+            onSignOut = viewModel::signOut,
+            onOpenTerms = onOpenTerms,
+            onOpenPrivacy = onOpenPrivacy,
+        )
+    }
+    SearchContent(state, account, actions)
+    if (state.consentOpen) {
+        ConsentDialog(
+            onAccept = viewModel::signIn,
+            onDismiss = viewModel::dismissConsent,
+            onOpenTerms = onOpenTerms,
+            onOpenPrivacy = onOpenPrivacy,
+        )
+    }
 }
 
 @Composable
-fun SearchContent(
-    state: SearchUiState,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onShowStaff: (Boolean) -> Unit,
-    onShowBlackholed: (Boolean) -> Unit,
-) {
+fun SearchContent(state: SearchUiState, account: String?, actions: SearchActions) {
     Scaffold(contentWindowInsets = WindowInsets.safeDrawing) { padding ->
         BoxWithConstraints(
             Modifier
@@ -117,29 +148,26 @@ fun SearchContent(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Column(Modifier.widthIn(max = 480.dp).fillMaxWidth()) {
-                    SearchForm(state, onQueryChange, onSearch, onShowStaff, onShowBlackholed)
+                    SearchForm(state, actions)
                 }
             }
             LanguageSwitch(Modifier.align(Alignment.TopStart).padding(8.dp))
-            TokenInspectorButton(Modifier.align(Alignment.TopEnd).padding(8.dp))
+            Row(Modifier.align(Alignment.TopEnd).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                account?.let { AccountMenu(it, actions.onSignOut) }
+                TokenInspectorButton()
+            }
         }
     }
 }
 
 @Composable
-private fun SearchForm(
-    state: SearchUiState,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onShowStaff: (Boolean) -> Unit,
-    onShowBlackholed: (Boolean) -> Unit,
-) {
+private fun SearchForm(state: SearchUiState, actions: SearchActions) {
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val submit = {
         keyboard?.hide()
         focusManager.clearFocus()
-        onSearch()
+        actions.onSearch()
     }
     val inputError = state.error?.takeIf { it.isInputError }
     val panelError = state.error?.takeUnless { it.isInputError }
@@ -164,13 +192,13 @@ private fun SearchForm(
 
     OutlinedTextField(
         value = state.query,
-        onValueChange = onQueryChange,
+        onValueChange = actions.onQueryChange,
         modifier = Modifier.fillMaxWidth(),
         label = { Text(stringResource(R.string.search_label)) },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         trailingIcon = if (state.query.isNotEmpty()) {
             {
-                IconButton(onClick = { onQueryChange("") }) {
+                IconButton(onClick = { actions.onQueryChange("") }) {
                     Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_clear))
                 }
             }
@@ -178,7 +206,9 @@ private fun SearchForm(
             null
         },
         isError = inputError != null,
-        supportingText = inputError?.let { error -> { Text(error.message()) } },
+        supportingText = inputError?.let { error ->
+            { Text(error.message(), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+        },
         singleLine = true,
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.None,
@@ -203,23 +233,39 @@ private fun SearchForm(
     }
 
     Spacer(Modifier.height(12.dp))
-    VisibilityOptions(state.visibility, onShowStaff, onShowBlackholed)
+    VisibilityOptions(state.visibility, actions)
 
     if (panelError != null) {
         Spacer(Modifier.height(16.dp))
-        ErrorPanel(panelError, onRetry = onSearch)
+        ErrorPanel(panelError, onRetry = actions.onSearch)
+    }
+
+    Spacer(Modifier.height(20.dp))
+    LegalLinks(actions)
+}
+
+@Composable
+private fun LegalLinks(actions: SearchActions) {
+    val colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+    ) {
+        TextButton(onClick = actions.onOpenPrivacy, colors = colors) { Text(stringResource(R.string.legal_privacy_title)) }
+        TextButton(onClick = actions.onOpenTerms, colors = colors) { Text(stringResource(R.string.legal_terms_title)) }
     }
 }
 
-// Staff and blackholed profiles are only shown when their option is on.
+// Staff, blackholed and frozen profiles are only shown when their option is on.
 @Composable
-private fun VisibilityOptions(visibility: Visibility, onShowStaff: (Boolean) -> Unit, onShowBlackholed: (Boolean) -> Unit) {
+private fun VisibilityOptions(visibility: Visibility, actions: SearchActions) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     ) {
-        OptionChip(stringResource(R.string.card_staff), visibility.staff, onShowStaff)
-        OptionChip(stringResource(R.string.card_blackholed), visibility.blackholed, onShowBlackholed)
+        OptionChip(stringResource(R.string.card_staff), visibility.staff, actions.onShowStaff)
+        OptionChip(stringResource(R.string.card_blackholed), visibility.blackholed, actions.onShowBlackholed)
+        OptionChip(stringResource(R.string.card_frozen), visibility.frozen, actions.onShowFrozen)
     }
 }
 
@@ -246,6 +292,6 @@ private fun OptionChip(label: String, selected: Boolean, onChange: (Boolean) -> 
 @Composable
 private fun SearchPreview() {
     SwiftyTheme {
-        SearchContent(SearchUiState(query = "jdoe", error = AppError.NotFound("jdoe"), visibility = Visibility(staff = true)), {}, {}, {}, {})
+        SearchContent(SearchUiState(query = "jdoe", error = AppError.NotFound("jdoe"), visibility = Visibility(staff = true)), "ravazque", SearchActions())
     }
 }
