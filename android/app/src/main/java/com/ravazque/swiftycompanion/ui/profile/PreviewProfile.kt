@@ -31,7 +31,6 @@ internal val previewProfile = Profile(
                 Skill("Organization", 3.2), Skill("Graphics", 2.4),
             ),
             beginAt = Instant.parse("2024-09-16T07:42:00Z"),
-            blackholedAt = Instant.parse("2027-03-01T07:42:00Z"),
         ),
         Cursus(
             9, "C Piscine", "c-piscine", 4.67, "Pisciner",

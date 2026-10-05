@@ -9,8 +9,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ravazque.swiftycompanion.R
 import com.ravazque.swiftycompanion.model.AppError
@@ -29,6 +31,9 @@ fun AppError.message(): String = when (this) {
     AppError.Forbidden -> stringResource(R.string.error_forbidden)
     is AppError.Server -> stringResource(R.string.error_server, code)
     AppError.UnexpectedResponse -> stringResource(R.string.error_unexpected)
+    AppError.LoginCancelled -> stringResource(R.string.error_login_cancelled)
+    AppError.LoginFailed -> stringResource(R.string.error_login_failed)
+    AppError.NoBrowser -> stringResource(R.string.error_no_browser)
 }
 
 // Errors about what the user typed are shown under the text field instead of in a panel.
@@ -40,6 +45,7 @@ private val ProfileKind.hiddenMessage: Int
     get() = when (this) {
         ProfileKind.STAFF -> R.string.error_hidden_staff
         ProfileKind.BLACKHOLED -> R.string.error_hidden_blackholed
+        ProfileKind.FROZEN -> R.string.error_hidden_frozen
         ProfileKind.PISCINER, ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.ALUMNI -> R.string.error_hidden_pisciner
     }
 
@@ -55,8 +61,11 @@ fun ErrorPanel(error: AppError, onRetry: () -> Unit, modifier: Modifier = Modifi
         color = MaterialTheme.colorScheme.errorContainer,
         contentColor = MaterialTheme.colorScheme.onErrorContainer,
     ) {
-        Column(Modifier.padding(start = 16.dp, top = 14.dp, end = 8.dp, bottom = 6.dp)) {
-            Text(error.message(), style = MaterialTheme.typography.bodyMedium)
+        Column(
+            modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 16.dp, bottom = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(error.message(), style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
             if (error.isRetryable) {
                 TextButton(onClick = onRetry) { Text(stringResource(R.string.action_retry)) }
             }

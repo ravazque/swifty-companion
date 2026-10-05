@@ -8,14 +8,21 @@ Built with Kotlin and Jetpack Compose.
 
 ## Features
 
+- Only for the 42 community: the first search asks to accept the terms of use
+  and the privacy policy and to sign in with a 42 intra account. The sign-in
+  happens on the intra's own page; the app keeps only the login, until signing
+  out from the account button at the top right of the search screen.
+- Terms of use and privacy policy screens, in English and Spanish, linked from
+  the search screen and from the sign-in dialog.
 - Search by login. Invalid input, unknown logins, missing connection, rate
   limiting and server errors each get their own message, with a retry button
   when retrying can help.
 - Active students are shown; alumni too, with an "Alumni" tag. People who
   have not started the main cursus yet get a message under the search field
-  instead of a profile. So do staff and blackholed students, unless the Staff
-  or Blackholed chip under the search button is on (both are off by default
-  and kept across restarts). See "Profile kinds".
+  instead of a profile. So do staff, blackholed students and students on
+  freeze, unless their chip under the search button (Staff, Blackholed,
+  Freeze) is on; the chips are off by default and kept across restarts. See
+  "Profile kinds".
 - English and Spanish: the EN | ES switch at the top of the search screen
   changes the language inside the app. On Android 13 and newer the choice is
   the same as the app language in the system settings.
@@ -52,13 +59,14 @@ Built with Kotlin and Jetpack Compose.
   correction, searching group, creating group) and the date it was graded. Two
   menus filter by status, with how many projects have each one, and sort by
   date, grade or name. The chosen filter and order belong to the kind of
-  profile: students; transcenders and alumni together; staff; blackholed.
+  profile: students; transcenders and alumni together; staff; blackholed;
+  on freeze.
   Opening another profile of the same group keeps them, and they are kept
   across restarts.
 - Adaptive layout: one scrolling column on phones in portrait; from 600 dp
   wide (tablets, phones in landscape, unfolded foldables) the card, level and
   details sit on the left and the projects on the right, each pane with its
-  own scroll. The top bar scrolls away with the content and comes back on the
+  own scroll. On wide screens both panes stay together in the middle. The top bar scrolls away with the content and comes back on the
   first scroll up, which matters on short screens. Content stays clear of the
   system bars and display cutouts.
 - The selected cursus, the side of the card and the text typed in the search
@@ -111,6 +119,13 @@ INTRA_CLIENT_ID=u-s4t2ud-...
 INTRA_CLIENT_SECRET=s-s4t2ud-...
 ```
 
+The application page on the intra must also list this redirect URI, which is
+where the intra sends the person back after signing in:
+
+```
+com.ravazque.swiftycompanion://oauth
+```
+
 The values are compiled into the build, so rebuild after changing them. If they
 are missing the build still succeeds and the app explains what is wrong when a
 search is made. Application secrets expire periodically; if searches fail with
@@ -136,8 +151,11 @@ cd android
 ## Usage
 
 1. Type a login and press Search or the keyboard's search key. EN | ES at
-   the top left switches the language; the Staff and Blackholed chips under
-   the button also let those profiles through.
+   the top left switches the language; the Staff, Blackholed and Freeze chips
+   under the button also let those profiles through. The first time, tick the
+   box to accept the terms of use and the privacy policy (both open from the
+   dialog) and sign in with 42 in the page that opens; the search then runs on
+   its own. Your login at the top right signs you out.
 2. The profile opens if the login exists and belongs to an active student or
    an alumnus. The refresh icon reloads it.
 3. Tap the card to see the skills radar on its back. Tap a point or a skill
@@ -157,11 +175,12 @@ app decides from the user and their main cursus (`42cursus`), in this order:
 | Staff | `staff?` is true | With the Staff option, tagged "Staff" |
 | Alumni | `alumni?` is true or the main cursus grade is "Alumni" | Yes, with an "Alumni" tag |
 | Not started (pisciner) | no main cursus, or its kickoff (`begin_at`) is still to come | No |
-| Blackholed | the main cursus has ended (`end_at`) or its black hole date (`blackholed_at`) has passed | With the Blackholed option, tagged "Blackholed" |
+| Blackholed | the main cursus has ended (`end_at` has passed). A past black hole date (`blackholed_at`) alone is not enough: many active students keep one without their cursus being closed | With the Blackholed option, tagged "Blackholed" |
+| On freeze | the account is inactive (`active?` is false) while the main cursus is still open. The API has no freeze field; this is the only sign of it | With the Freeze option, tagged "Freeze" |
 | Transcender | main cursus grade "Transcender" | Yes |
 | Student | anyone else in the main cursus | Yes |
 
-The two options are stored in the app's private preferences and read on every
+The three options are stored in the app's private preferences and read on every
 search, so they also apply when a profile is refreshed.
 
 ### Alumni deadline
@@ -206,7 +225,19 @@ does not change after these actions.
 - **Search flow**: the search screen validates the login, fetches the profile
   and only then opens the profile screen, so the profile view never shows an
   unknown login and every search error appears next to the text field.
-- **Authentication**: OAuth2 client credentials. `TokenManager` keeps the
+- **Sign-in**: OAuth2 authorization code with `state` and PKCE
+  (`SessionManager`). After the terms are accepted, a Custom Tab opens the
+  intra's authorize page; the intra sends the browser back to
+  `com.ravazque.swiftycompanion://oauth`, which Android hands to `MainActivity`
+  (`singleTask`, so the tab closes and no second copy of the screen appears).
+  The app checks the `state`, exchanges the code for a token of the person who
+  signed in, reads their login from `/v2/me` and drops that token: only the
+  login, the accepted terms version and its date are stored. The `state` and
+  the PKCE verifier are saved before the browser opens, so the sign-in also
+  completes if Android killed the app in the meantime. This keeps the app for
+  people with a 42 account; it is not a security barrier, since the
+  application secret is inside the APK.
+- **Authentication**: searches use OAuth2 client credentials. `TokenManager` keeps the
   access token in memory and in the app's private preferences and reuses it
   until one minute before it expires. `AuthInterceptor` adds it to every
   request and renews it when it is about to expire; `TokenAuthenticator`
@@ -257,6 +288,9 @@ does not change after these actions.
   card still fits in its height, kept between 300 and 440 dp so the card's
   text stays readable on short screens. That height is measured as if the top
   bar were fully shown, so the card keeps its size while the bar scrolls away.
+  The project list is at most 720 dp wide and the two panes are centered
+  together, so the empty space is outside both panes and never scrolls the
+  list.
   Both layouts share the same composables.
 - **Screen state**: the selected cursus and card side live in the profile
   ViewModel and in its `SavedStateHandle`, which Android restores after closing
@@ -275,9 +309,11 @@ android/
     SwiftyApp.kt, AppContainer.kt, MainActivity.kt  app entry point and dependency wiring
     model/                                          Profile and related models, AppError, login validation
     data/                                           UserRepository, JSON to model mapping
-    data/auth/                                      token storage, renewal, interceptor, authenticator
+    data/auth/                                      app token (storage, renewal, interceptor, authenticator), sign-in session
     data/net/                                       Retrofit interface, JSON models, HTTP client, rate limit
-    ui/                                             navigation, theme, search screen, language switch
+    ui/                                             navigation, theme, language switch
+    ui/search/                                      search screen, sign-in dialog, account menu
+    ui/legal/                                       terms of use and privacy policy
     ui/debug/                                       token inspector (debug builds only)
     ui/profile/                                     profile screen, cursus selector, level panel, details, projects
     ui/profile/card/                                profile card (front, back, flip), level ring, skills radar, wallet sign
@@ -287,12 +323,12 @@ android/
 ## Tests
 
 `./gradlew testDebugUnitTest` runs the unit tests on the JVM. The network tests
-use a local HTTP server that imitates the token and user endpoints, so they go
+use a local HTTP server that imitates the token, `/v2/me` and user endpoints, so they go
 through the real OkHttp and Retrofit stack without touching the API. They
 cover token reuse, reuse after a restart, renewal before expiry, renewal and
 replay after a 401, rejected credentials, an unreadable token answer, both
 inspector actions, error mapping (404, 429, 5xx, malformed JSON, no
-connection), hidden profiles (not started, and staff and blackholed with every
+connection), hidden profiles (not started, and staff, blackholed and frozen with every
 combination of the search options) without extra requests, which coalition is
 kept and the user's score in it (also when that call fails), the compact
 score format, the
@@ -302,4 +338,9 @@ selection, the axes of the main and piscine charts, the projects of each
 cursus with their filter and sort orders, login validation, and restoring the
 search text, the selected cursus and card side after Android kills the app
 process, sharing the project filter and order within each group of profiles,
-and keeping the search options for the next launch.
+and keeping the search options for the next launch. The sign-in tests cover
+the authorize address (state, PKCE challenge checked against the RFC 7636
+example), the code exchange and `/v2/me` with the person's token, a forged
+`state`, a refused or rejected sign-in, repeated redirects, signing out, new
+terms versions, the consent before the first search, the search resuming
+after the sign-in, and a sign-in that survives Android killing the app.

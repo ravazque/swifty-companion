@@ -28,9 +28,9 @@ class StateRestoreTest {
     @Test
     fun searchQuerySurvivesProcessDeath() {
         val saved = SavedStateHandle()
-        SearchViewModel(saved, intra.repository()).onQueryChange("jdoe")
+        SearchViewModel(saved, intra.repository(), intra.session()).onQueryChange("jdoe")
 
-        val restored = SearchViewModel(saved.afterProcessDeath(), intra.repository())
+        val restored = SearchViewModel(saved.afterProcessDeath(), intra.repository(), intra.session())
 
         assertEquals("jdoe", restored.state.value.query)
     }
@@ -38,15 +38,16 @@ class StateRestoreTest {
     @Test
     fun searchOptionsAreKeptForTheNextLaunch() {
         val repository = intra.repository()
-        SearchViewModel(SavedStateHandle(), repository).apply {
+        SearchViewModel(SavedStateHandle(), repository, intra.session()).apply {
             showStaff(true)
             showBlackholed(true)
+            showFrozen(true)
             showStaff(false)
         }
 
-        val restored = SearchViewModel(SavedStateHandle(), repository).state.value
+        val restored = SearchViewModel(SavedStateHandle(), repository, intra.session()).state.value
 
-        assertEquals(Visibility(staff = false, blackholed = true), restored.visibility)
+        assertEquals(Visibility(staff = false, blackholed = true, frozen = true), restored.visibility)
     }
 
     @Test
@@ -64,7 +65,7 @@ class StateRestoreTest {
     @Test
     fun projectViewIsSharedWithinEachProfileGroup() = runTest {
         intra.userResponse = { request, _ -> json(200, USERS.getValue(request.url.encodedPath.substringAfterLast('/'))) }
-        val repository = intra.repository(visibility = Visibility(staff = true)).apply { USERS.keys.forEach { fetch(it) } }
+        val repository = intra.repository(visibility = Visibility(staff = true, frozen = true)).apply { USERS.keys.forEach { fetch(it) } }
         val views = MemoryProjectViewStore()
         fun open(login: String) = ProfileViewModel(login, SavedStateHandle(), repository, views)
 
@@ -77,6 +78,7 @@ class StateRestoreTest {
         assertEquals(ProjectView(ProjectStatus.PASSED, ProjectSort.GRADE), open("amy").state.value.projectView)
         assertEquals(ProjectView(sort = ProjectSort.NAME), open("old").state.value.projectView)
         assertEquals(ProjectView(), open("boss").state.value.projectView)
+        assertEquals(ProjectView(), open("away").state.value.projectView)
     }
 
     @Test
@@ -94,7 +96,7 @@ class StateRestoreTest {
     }
 }
 
-// Two students, a transcender, an alumni and a staff member.
+// Two students, a transcender, an alumni, a staff member and a student on freeze.
 private val USERS = mapOf(
     "jdoe" to MINIMAL_USER,
     "amy" to """{"id": 2, "login": "amy", "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z",
@@ -103,4 +105,6 @@ private val USERS = mapOf(
         "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}""",
     "old" to """{"id": 4, "login": "old", "alumni?": true}""",
     "boss" to """{"id": 5, "login": "boss", "staff?": true}""",
+    "away" to """{"id": 6, "login": "away", "active?": false, "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z",
+        "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}""",
 )

@@ -12,4 +12,7 @@ sealed class AppError : Exception() {
     data object Forbidden : AppError()
     data class Server(val code: Int) : AppError()
     data object UnexpectedResponse : AppError()
+    data object LoginCancelled : AppError()
+    data object LoginFailed : AppError()
+    data object NoBrowser : AppError()
 }

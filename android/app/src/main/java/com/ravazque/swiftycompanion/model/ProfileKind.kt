@@ -4,10 +4,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-enum class ProfileKind { STUDENT, TRANSCENDER, ALUMNI, BLACKHOLED, PISCINER, STAFF }
+enum class ProfileKind { STUDENT, TRANSCENDER, ALUMNI, BLACKHOLED, FROZEN, PISCINER, STAFF }
 
 // Profiles of one group share the project filter and sort: opening another of the same group keeps them.
-enum class ProfileGroup { STUDENTS, GRADUATES, STAFF, BLACKHOLED }
+enum class ProfileGroup { STUDENTS, GRADUATES, STAFF, BLACKHOLED, FROZEN }
 
 val ProfileKind.group: ProfileGroup
     get() = when (this) {
@@ -15,30 +15,34 @@ val ProfileKind.group: ProfileGroup
         ProfileKind.TRANSCENDER, ProfileKind.ALUMNI -> ProfileGroup.GRADUATES
         ProfileKind.STAFF -> ProfileGroup.STAFF
         ProfileKind.BLACKHOLED -> ProfileGroup.BLACKHOLED
+        ProfileKind.FROZEN -> ProfileGroup.FROZEN
     }
 
-// Kinds the search may also show besides students, transcenders and alumni; both off by default.
-data class Visibility(val staff: Boolean = false, val blackholed: Boolean = false)
+// Kinds the search may also show besides students, transcenders and alumni; all off by default.
+data class Visibility(val staff: Boolean = false, val blackholed: Boolean = false, val frozen: Boolean = false)
 
 // People who have not started the main cursus are never shown.
 fun ProfileKind.isHidden(visibility: Visibility): Boolean = when (this) {
     ProfileKind.STAFF -> !visibility.staff
     ProfileKind.BLACKHOLED -> !visibility.blackholed
+    ProfileKind.FROZEN -> !visibility.frozen
     ProfileKind.PISCINER -> true
     ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.ALUMNI -> false
 }
 
 // The API has no single field for this. Checked in order: staff flag; alumni flag or grade;
-// no main cursus or a kickoff still to come (a pisciner); a main cursus closed or past its black
-// hole without graduating; the Transcender grade; anyone else in the main cursus is a student.
-fun profileKind(isStaff: Boolean, isAlumni: Boolean, main: Cursus?, now: Instant): ProfileKind {
+// no main cursus or a kickoff still to come (a pisciner); a main cursus already closed (end_at:
+// a past blackholed_at alone does not close it, many active students keep one); an inactive
+// account with the cursus still open (on freeze; the API has no freeze field); the Transcender
+// grade; anyone else in the main cursus is a student.
+fun profileKind(isStaff: Boolean, isAlumni: Boolean, isActive: Boolean, main: Cursus?, now: Instant): ProfileKind {
     if (isStaff) return ProfileKind.STAFF
     if (isAlumni || main?.grade == ALUMNI_GRADE) return ProfileKind.ALUMNI
     val kickoff = main?.beginAt
     if (main == null || kickoff == null || kickoff > now) return ProfileKind.PISCINER
-    val closed = main.endAt?.let { it <= now } == true || main.blackholedAt?.let { it <= now } == true
     return when {
-        closed -> ProfileKind.BLACKHOLED
+        main.endAt?.let { it <= now } == true -> ProfileKind.BLACKHOLED
+        !isActive -> ProfileKind.FROZEN
         main.grade == TRANSCENDER_GRADE -> ProfileKind.TRANSCENDER
         else -> ProfileKind.STUDENT
     }

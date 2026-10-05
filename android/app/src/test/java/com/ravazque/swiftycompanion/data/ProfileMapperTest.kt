@@ -36,7 +36,6 @@ class ProfileMapperTest {
         assertEquals(19, main.levelPercent)
         assertEquals(Instant.parse("2024-10-01T07:00:00Z"), main.beginAt)
         assertNull(main.endAt)
-        assertEquals(Instant.parse("2030-01-01T07:00:00Z"), main.blackholedAt)
         assertEquals(listOf("42cursus", "c-piscine"), profile.cursus.map { it.slug })
     }
 
@@ -88,6 +87,17 @@ class ProfileMapperTest {
         assertEquals("Marventis", listOf(coalition("tiamant"), coalition("marventis")).mainCoalition()?.name)
         assertNull(listOf(coalition("corvus"), coalition("cassiopeia")).mainCoalition())
         assertNull(emptyList<CoalitionDto>().mainCoalition())
+    }
+
+    @Test
+    fun aPastBlackHoleDateWithoutEndAtIsStillAStudent() {
+        val cadet = IntraJson.decodeFromString<UserDto>(
+            """{"id": 3, "login": "cadet", "cursus_users": [{"level": 9.06, "grade": "Cadet",
+            "begin_at": "2024-09-16T07:42:00.000Z", "end_at": null, "blackholed_at": "2026-10-03T07:42:00.000Z",
+            "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""
+        ).toProfile(now)
+
+        assertEquals(ProfileKind.STUDENT, cadet.kind)
     }
 
     @Test

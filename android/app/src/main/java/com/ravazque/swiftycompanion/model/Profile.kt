@@ -43,7 +43,6 @@ data class Cursus(
     val skills: List<Skill>,
     val beginAt: Instant? = null,
     val endAt: Instant? = null,
-    val blackholedAt: Instant? = null,
 ) {
     // Levels come with two decimals; working in hundredths avoids 14.19 - 14 = 0.18999...
     private val hundredths: Int get() = (level * 100).roundToInt()
