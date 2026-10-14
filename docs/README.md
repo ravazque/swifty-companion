@@ -1,346 +1,118 @@
 # Swifty Companion
 
-An Android app to look up the profiles of active 42 students through the 42
-API v2. Type a login and the app shows the profile: photo, level, location,
-wallet, correction points, skills, projects and more.
+Swifty Companion is an Android app, written in Kotlin with Jetpack Compose,
+that looks up the profile of a 42 student through the 42 API v2. A login typed
+on the first screen opens the second one: photo, level and progress, login,
+grade and title, workstation, wallet, correction points, coalition and score,
+the skills with their level and percentage, and every project of the selected
+cursus, failed ones included. The app is in English and Spanish.
 
-Built with Kotlin and Jetpack Compose.
+## How it works
 
-## Features
+- **Two screens.** The search screen validates the login and fetches the
+  profile before opening the profile screen, so every error (empty or
+  malformed login, unknown login, hidden profile, no network, rate limit,
+  server error) appears under the search field, with a retry button when
+  retrying can help. The top bar arrow and the system back gesture return to
+  the search.
+- **Profile.** The card shows the identity and the numbers on its front and a
+  radar chart of the skills on its back, drawn on a `Canvas`; a tap on a point
+  or a skill name shows its level and percentage. A selector switches between
+  the main cursus and the piscine, and the projects can be filtered by status
+  and sorted by date, grade or name.
+- **Layout.** One scrolling column below 600 dp; from 600 dp (tablets, phones
+  in landscape) the card and details on the left and the projects on the right.
+  The selected cursus, the card side and the search text survive rotations and
+  the app being closed in the background.
+- **Token.** Searches use the application's own token (OAuth2 client
+  credentials), requested once, kept in private preferences and reused across
+  requests and restarts. The same token is required by the intra CDN for
+  profile photos, so the image loader adds it to those requests only.
+- **Sign-in.** The first search asks to accept the terms of use and the
+  privacy policy and to sign in with a 42 account (OAuth2 authorization code
+  with PKCE, in a Custom Tab); only the login is kept.
+- **Profile kinds.** The API has no single field for this, so the app decides
+  from the user and the main cursus: active students and alumni are shown;
+  people who have not started the cursus are not; staff, blackholed and frozen
+  profiles appear only with their chip under the search button turned on.
+- **Architecture.** MVVM: Compose screens observe a `StateFlow` of their
+  ViewModel, which calls `UserRepository` (Retrofit, OkHttp,
+  kotlinx.serialization); dependencies are wired by hand in `AppContainer`.
+  Requests are spaced to stay under 2 per second, and a `429` is retried after
+  the delay the server asks for.
 
-- Only for the 42 community: the first search asks to accept the terms of use
-  and the privacy policy and to sign in with a 42 intra account. The sign-in
-  happens on the intra's own page; the app keeps only the login, until signing
-  out from the account button at the top right of the search screen.
-- Terms of use and privacy policy screens, in English and Spanish, linked from
-  the search screen and from the sign-in dialog.
-- Search by login. Invalid input, unknown logins, missing connection, rate
-  limiting and server errors each get their own message, with a retry button
-  when retrying can help.
-- Active students are shown; alumni too, with an "Alumni" tag. People who
-  have not started the main cursus yet get a message under the search field
-  instead of a profile. So do staff, blackholed students and students on
-  freeze, unless their chip under the search button (Staff, Blackholed,
-  Freeze) is on; the chips are off by default and kept across restarts. See
-  "Profile kinds".
-- English and Spanish: the EN | ES switch at the top of the search screen
-  changes the language inside the app. On Android 13 and newer the choice is
-  the same as the app language in the system settings.
-- Profile card: coalition logo and name, level tag, photo inside a ring that
-  fills with the progress towards the next level, full name, login, grade,
-  selected title, the workstation the user is logged in at (or "Offline")
-  centered under the name, level, wallet, correction points and the user's own
-  score in their coalition. The score is shown as it is up to 999 and in
-  thousands with one decimal from 1000 on (41337 is 41.3k, cut rather than
-  rounded, with the decimal separator of the language); it can be negative,
-  and it shows "—" in the piscine or without a coalition. The card keeps its
-  proportions on every screen size, and its layout does not move when the
-  cursus or the location changes.
-- Tapping the card flips it to the back, a radar chart of the skills in the
-  selected cursus on the intra's 0-21 scale. The main cursus always shows its
-  20 skill axes and the piscine its 6, with the untouched ones at zero.
-  Tapping a point or a skill name opens a bubble with the skill's level and
-  percentage; tapping elsewhere closes it, and a second tap flips the card
-  back.
-- Cursus selector when the user has more than one cursus. Everything follows
-  the selected one: card, radar, level panel, details and projects. The
-  piscine is shown in a neutral blue, without the coalition; so is a profile
-  without a coalition.
-- Coalitions: only the four of the main cursus count (Zefiria, Marventis,
-  Ignisaria and Tiamant, in that order if a user has more than one). Others,
-  like the piscine coalitions, are ignored; a profile with none of the four
-  shows no coalition and uses the neutral blue.
-- Level panel with the exact level, "level in the Cursus" or "level in the
-  Piscine", and a bar with the progress towards the next level.
-- Details: the pool month and, outside the piscine, the kickoff date and, for
-  a Transcender, the alumni deadline (see "Alumni deadline").
-- Projects of the selected cursus, including the failed ones. Each one shows
-  its mark, its status in color (passed, failed, in progress, waiting for
-  correction, searching group, creating group) and the date it was graded. Two
-  menus filter by status, with how many projects have each one, and sort by
-  date, grade or name. The chosen filter and order belong to the kind of
-  profile: students; transcenders and alumni together; staff; blackholed;
-  on freeze.
-  Opening another profile of the same group keeps them, and they are kept
-  across restarts.
-- Adaptive layout: one scrolling column on phones in portrait; from 600 dp
-  wide (tablets, phones in landscape, unfolded foldables) the card, level and
-  details sit on the left and the projects on the right, each pane with its
-  own scroll. On wide screens both panes stay together in the middle. The top bar scrolls away with the content and comes back on the
-  first scroll up, which matters on short screens. Content stays clear of the
-  system bars and display cutouts.
-- The selected cursus, the side of the card and the text typed in the search
-  are kept when the screen rotates, when the layout changes and when Android
-  closes the app in the background.
-- Refresh from the profile; back to the search with the top bar arrow or the
-  system back gesture.
-- One access token reused across requests and app restarts, renewed before it
-  expires and again if the server rejects it.
-- Token inspector in debug builds (lock icon at the top of both screens): token
-  fingerprint, time left, how many API requests and token requests the app has
-  made, the last renewal and its cause, and two buttons that expire or corrupt
-  the stored token to exercise both renewal paths.
+## Dependencies
 
-## Repository layout
+| Dependency | Version | Debian / Ubuntu | Arch |
+|---|---|---|---|
+| A JDK, to start Gradle | 17 or newer | `openjdk-17-jdk` | `jdk17-openjdk` |
+| Android SDK with Platform 37 | Android Studio 2026.1 or newer, or the command-line tools | https://developer.android.com/studio | same |
+| GNU Make | any | `make` | `make` |
+| An emulator or a device | Android 8.0 (API 26) or newer | Device Manager in Android Studio, or a phone with USB debugging | same |
+| A 42 API application | its UID and SECRET | https://profile.intra.42.fr/oauth/applications | same |
 
-```
-.env.example     template for the API credentials (copy to .env)
-docs/            documentation
-android/         the Android project: open this folder in Android Studio
-```
-
-## Requirements
-
-- Android Studio 2026.1 or newer (Android Gradle Plugin 9.4.1, Gradle 9.7.1
-  through the wrapper).
-- Android SDK Platform 37 to compile. Android Studio offers to install it on the
-  first sync.
-- Gradle runs on JDK 25 (`android/gradle/gradle-daemon-jvm.properties`).
-  Android Studio uses its bundled runtime, which is JDK 25; from a terminal,
-  Gradle downloads a JDK 25 automatically the first time if none is installed.
-- An emulator or a device running Android 8.0 (API 26) or newer.
-- A 42 API application created at
-  <https://profile.intra.42.fr/oauth/applications>. The redirect URI is not
-  used; the app only uses the client credentials flow.
+The Gradle wrapper downloads Gradle 9.7.1, the Android Gradle Plugin 9.4.1 and
+every library; the build runs on JDK 25, which Gradle downloads the first time
+if none is installed. `make install` checks the JDK and the SDK (`ANDROID_HOME`,
+or `~/Android/Sdk`, written to `android/local.properties`).
 
 ## Configuration
 
-The API credentials are read from a `.env` file at the repository root (next
-to `.env.example`, not inside `android/`), which is ignored by git:
-
-```
-cp .env.example .env
-```
-
-Fill in the application's UID and SECRET, without quotes:
+The credentials are read from `.env` at the repository root, next to
+`.env.example` and ignored by git, and compiled into the build:
 
 ```
 INTRA_CLIENT_ID=u-s4t2ud-...
 INTRA_CLIENT_SECRET=s-s4t2ud-...
 ```
 
-The application page on the intra must also list this redirect URI, which is
-where the intra sends the person back after signing in:
+The application page on the intra must list the redirect URI
+`com.ravazque.swiftycompanion://oauth`, where the sign-in returns. Without
+credentials the build still succeeds and the app explains what is missing when
+a search is made; an expired secret shows "The API rejected the credentials".
+
+## Build and run
 
 ```
-com.ravazque.swiftycompanion://oauth
+make           # the list of targets
+make install   # checks the JDK, the SDK and .env; builds nothing
+make apk       # builds the debug APK into android/app/build/outputs/apk/debug/
+make run       # builds, installs the debug build on the connected device and opens it
+make test      # 79 unit tests on the JVM
+make lint      # static checks
+make clean     # Gradle's build output
+make fclean    # clean, and Gradle's project caches
 ```
 
-The values are compiled into the build, so rebuild after changing them. If they
-are missing the build still succeeds and the app explains what is wrong when a
-search is made. Application secrets expire periodically; if searches fail with
-"The API rejected the credentials", copy the current secret from the
-application page.
+`make install` only prepares the machine, `make apk` produces the APK file,
+and `make run` puts the app on a device through Gradle's `installDebug`, which
+is an install on the phone, not on the computer. The `android/` folder also
+opens in Android Studio, where the `app` configuration runs on a virtual
+device. The unit tests run against a local fake of the API (OkHttp's MockWebServer), so they need no network: token
+reuse and renewal, error mapping, profile kinds, project status and order,
+the sign-in flow, state restoration, and the token on profile photos only.
 
-## Running
+## Bonus
 
-1. Open the `android/` folder (not the repository root) in Android Studio and
-   let Gradle sync.
-2. Create a virtual device in Device Manager if there is none.
-3. Select the `app` configuration and press Run.
+**Token renewal at expiry.** The token is renewed one minute before it
+expires, and renewed again with the request replayed once if the server
+answers `401`; renewal is synchronized, so concurrent requests never ask for
+two tokens. Debug builds show a token inspector (lock icon) whose buttons
+expire or corrupt the stored token to exercise both paths.
 
-From a terminal, starting at the repository root:
-
-```
-cd android
-./gradlew installDebug          # build and install on the running emulator or device
-./gradlew testDebugUnitTest     # unit tests
-./gradlew lintDebug             # static checks
-```
-
-## Usage
-
-1. Type a login and press Search or the keyboard's search key. EN | ES at
-   the top left switches the language; the Staff, Blackholed and Freeze chips
-   under the button also let those profiles through. The first time, tick the
-   box to accept the terms of use and the privacy policy (both open from the
-   dialog) and sign in with 42 in the page that opens; the search then runs on
-   its own. Your login at the top right signs you out.
-2. The profile opens if the login exists and belongs to an active student or
-   an alumnus. The refresh icon reloads it.
-3. Tap the card to see the skills radar on its back. Tap a point or a skill
-   name to see its level and percentage; tap elsewhere to close it, and again
-   to turn the card over. The chips above the card choose the cursus.
-4. Scroll down to the projects (on wide screens they are on the right). The
-   Status menu filters them and Sort by orders them.
-5. Go back with the arrow in the top bar or the system back gesture.
-
-### Profile kinds
-
-The API has no single field that says whether someone is a student, so the
-app decides from the user and their main cursus (`42cursus`), in this order:
-
-| Kind | Rule | Shown |
-|------|------|-------|
-| Staff | `staff?` is true | With the Staff option, tagged "Staff" |
-| Alumni | `alumni?` is true or the main cursus grade is "Alumni" | Yes, with an "Alumni" tag |
-| Not started (pisciner) | no main cursus, or its kickoff (`begin_at`) is still to come | No |
-| Blackholed | the main cursus has ended (`end_at` has passed). A past black hole date (`blackholed_at`) alone is not enough: many active students keep one without their cursus being closed | With the Blackholed option, tagged "Blackholed" |
-| On freeze | the account is inactive (`active?` is false) while the main cursus is still open. The API has no freeze field; this is the only sign of it | With the Freeze option, tagged "Freeze" |
-| Transcender | main cursus grade "Transcender" | Yes |
-| Student | anyone else in the main cursus | Yes |
-
-The three options are stored in the app's private preferences and read on every
-search, so they also apply when a profile is refreshed.
-
-### Alumni deadline
-
-A Transcender (not an alumnus) has eight months from the last time they gained
-experience to become alumni. The app takes the date the latest passed project
-of the main cursus was graded, adds eight months and shows that date in the
-details, as "Alumni". While a "Work Experience I" or "Work
-Experience II" project is open (not passed or failed), the count is paused
-and the row says "PAUSED".
-
-Filter Logcat by the tag `SwiftyAuth` to see when the access token is reused
-or renewed. The token itself is never logged.
-
-### Token inspector (debug builds)
-
-The lock icon at the top of both screens opens the token inspector:
-
-- **Token**: the first and last four characters of the access token.
-- **Expires in**: time left before the token expires.
-- **API requests** and **Token requests**: counted since the app started. Many
-  API requests share one token request; after a restart the stored token is
-  reused, so token requests can stay at zero.
-- **Last renewal**: when the token was last requested and why: before expiry,
-  or after the server answered 401.
-- **Expire now** marks the stored token as expired: the next search or refresh
-  asks for a token before sending the request.
-- **Corrupt token** replaces the stored token with an invalid one: the next
-  request is rejected with a 401, the app asks for a token and replays the
-  request, and the profile still loads.
-
-While the old token is still valid on the server, the API answers a token
-request with that same token and its remaining lifetime, so the fingerprint
-does not change after these actions.
-
-## How it works
-
-- **Architecture**: MVVM. Compose screens observe a `StateFlow` exposed by a
-  ViewModel; the ViewModel calls `UserRepository`, which uses Retrofit and
-  OkHttp and maps the JSON into plain Kotlin models. Dependencies are wired by
-  hand in `AppContainer`.
-- **Search flow**: the search screen validates the login, fetches the profile
-  and only then opens the profile screen, so the profile view never shows an
-  unknown login and every search error appears next to the text field.
-- **Sign-in**: OAuth2 authorization code with `state` and PKCE
-  (`SessionManager`). After the terms are accepted, a Custom Tab opens the
-  intra's authorize page; the intra sends the browser back to
-  `com.ravazque.swiftycompanion://oauth`, which Android hands to `MainActivity`
-  (`singleTask`, so the tab closes and no second copy of the screen appears).
-  The app checks the `state`, exchanges the code for a token of the person who
-  signed in, reads their login from `/v2/me` and drops that token: only the
-  login, the accepted terms version and its date are stored. The `state` and
-  the PKCE verifier are saved before the browser opens, so the sign-in also
-  completes if Android killed the app in the meantime. This keeps the app for
-  people with a 42 account; it is not a security barrier, since the
-  application secret is inside the APK.
-- **Authentication**: searches use OAuth2 client credentials. `TokenManager` keeps the
-  access token in memory and in the app's private preferences and reuses it
-  until one minute before it expires. `AuthInterceptor` adds it to every
-  request and renews it when it is about to expire; `TokenAuthenticator`
-  renews it and replays the request once if the server answers 401. Renewal is
-  synchronized, so concurrent requests never ask for two tokens.
-- **Rate limit**: requests are spaced to stay under 2 per second, and a 429
-  answer is retried after the delay the server asks for.
-- **Errors**: every failure is mapped to a typed `AppError` with its own
-  translated message. Token request failures are raised as `IOException`s,
-  the only kind OkHttp reports from inside an interceptor, so not even an
-  unreadable token answer can crash the app.
-- **Profile card**: drawn with Compose layouts and a `Canvas` for the level ring.
-  Every size inside the card is a multiple of one unit (card width / 32), so the
-  card scales as one piece; its text intentionally ignores the system font
-  scale to keep the proportions, while the rest of the app follows it. Images
-  are loaded with Coil, with an SVG decoder for coalition logos.
-- **Flip**: the card rotates around its vertical axis in a graphics layer; past
-  90 degrees the back is shown with a half turn of its own so it does not read
-  mirrored. The visible side is saved, so it survives rotation and refresh.
-- **Skills radar**: drawn by hand on a `Canvas` with a `TextMeasurer`. The
-  radius is the largest one that keeps every label inside the card, and labels
-  that would overlap their neighbors are moved apart. The same geometry
-  answers taps: a tap on a name, or close to a point, selects that skill and
-  the bubble is placed above the point (below if there is no room), always
-  inside the chart. The piscine chart is a hexagon with Unix at the upper left
-  and the other skills clockwise.
-- **Wallet sign**: the ₳ is drawn as a vector, since many phone fonts have no
-  glyph for it.
-- **Project status**: an attempt that is waiting for correction, searching a
-  group or creating a group keeps that status. Otherwise the latest grade
-  decides: validated is passed; a failed grade, or finished without
-  validation, is failed; without a grade it is in progress. Some attempts keep
-  an open status after being graded (piscine exams stay "in_progress" with
-  their mark), which is why the grade comes first for them.
-- **Hidden profiles**: the repository classifies the profile right after the
-  user request and stops there if it is hidden, so a hidden profile costs one
-  request. Visible ones also fetch the coalitions, keep the main cursus one and
-  then fetch the user's score in it (`coalitions_users`). If either call fails
-  the profile still shows, without the coalition or without the score.
-- **Language**: on Android 13 and newer the switch sets the app language
-  through the system's `LocaleManager`; on older versions the choice is kept
-  in preferences and applied when the activity starts. Every language ships
-  in the base APK (language splits are off), since the app changes it at
-  runtime.
-- **Layout**: `ProfileScreen` measures the space it gets with
-  `BoxWithConstraints`. Below 600 dp it shows one `LazyColumn`; from 600 dp
-  it shows two panes. The left pane is as wide as it can be while the whole
-  card still fits in its height, kept between 300 and 440 dp so the card's
-  text stays readable on short screens. That height is measured as if the top
-  bar were fully shown, so the card keeps its size while the bar scrolls away.
-  The project list is at most 720 dp wide and the two panes are centered
-  together, so the empty space is outside both panes and never scrolls the
-  list.
-  Both layouts share the same composables.
-- **Screen state**: the selected cursus and card side live in the profile
-  ViewModel and in its `SavedStateHandle`, which Android restores after closing
-  the app in the background. The project filter and order are saved in the
-  app's private preferences under the profile's group and read whenever a
-  profile of that group opens. Since none of them live in the composables,
-  switching between the one and two pane layouts keeps them.
-
-## Project structure
+## Layout
 
 ```
-android/
-  settings.gradle.kts, build.gradle.kts, gradle/    Gradle setup, wrapper and version catalog
-  app/build.gradle.kts                              app module; reads ../.env into BuildConfig
-  app/src/main/java/com/ravazque/swiftycompanion/
-    SwiftyApp.kt, AppContainer.kt, MainActivity.kt  app entry point and dependency wiring
-    model/                                          Profile and related models, AppError, login validation
-    data/                                           UserRepository, JSON to model mapping
-    data/auth/                                      app token (storage, renewal, interceptor, authenticator), sign-in session
-    data/net/                                       Retrofit interface, JSON models, HTTP client, rate limit
-    ui/                                             navigation, theme, language switch
-    ui/search/                                      search screen, sign-in dialog, account menu
-    ui/legal/                                       terms of use and privacy policy
-    ui/debug/                                       token inspector (debug builds only)
-    ui/profile/                                     profile screen, cursus selector, level panel, details, projects
-    ui/profile/card/                                profile card (front, back, flip), level ring, skills radar, wallet sign
-  app/src/test/                                     unit tests and a local fake of the API
+swifty-companion/
+├── Makefile                                              # install, apk, run, test, lint, clean
+├── .env.example                                          # template for the API credentials
+└── android/                                              # the Android project
+    ├── app/build.gradle.kts                              # app module; reads ../.env into BuildConfig
+    ├── app/src/main/java/com/ravazque/swiftycompanion/
+    │   ├── model/                                        # Profile, profile kinds, errors, login validation
+    │   ├── data/                                         # UserRepository and the JSON to model mapping
+    │   ├── data/auth/                                    # app token, sign-in session, CDN token
+    │   ├── data/net/                                     # Retrofit interface, JSON models, HTTP clients, rate limit
+    │   └── ui/                                           # search, profile, card, legal texts, token inspector
+    └── app/src/test/                                     # unit tests and the local fake of the API
 ```
-
-## Tests
-
-`./gradlew testDebugUnitTest` runs the unit tests on the JVM. The network tests
-use a local HTTP server that imitates the token, `/v2/me` and user endpoints, so they go
-through the real OkHttp and Retrofit stack without touching the API. They
-cover token reuse, reuse after a restart, renewal before expiry, renewal and
-replay after a 401, rejected credentials, an unreadable token answer, both
-inspector actions, error mapping (404, 429, 5xx, malformed JSON, no
-connection), hidden profiles (not started, and staff, blackholed and frozen with every
-combination of the search options) without extra requests, which coalition is
-kept and the user's score in it (also when that call fails), the compact
-score format, the
-alumni deadline (date, pause by an open work experience, who has one), JSON to model
-mapping (including project status and order), the profile kind rules, cursus
-selection, the axes of the main and piscine charts, the projects of each
-cursus with their filter and sort orders, login validation, and restoring the
-search text, the selected cursus and card side after Android kills the app
-process, sharing the project filter and order within each group of profiles,
-and keeping the search options for the next launch. The sign-in tests cover
-the authorize address (state, PKCE challenge checked against the RFC 7636
-example), the code exchange and `/v2/me` with the person's token, a forged
-`state`, a refused or rejected sign-in, repeated redirects, signing out, new
-terms versions, the consent before the first search, the search resuming
-after the sign-in, and a sign-in that survives Android killing the app.
