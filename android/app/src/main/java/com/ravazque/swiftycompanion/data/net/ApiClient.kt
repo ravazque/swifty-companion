@@ -2,10 +2,12 @@ package com.ravazque.swiftycompanion.data.net
 
 import com.ravazque.swiftycompanion.data.auth.AuthApi
 import com.ravazque.swiftycompanion.data.auth.AuthInterceptor
+import com.ravazque.swiftycompanion.data.auth.CdnAuthInterceptor
 import com.ravazque.swiftycompanion.data.auth.MeApi
 import com.ravazque.swiftycompanion.data.auth.TokenAuthenticator
 import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.data.auth.TokenStore
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -21,10 +23,12 @@ class ApiClient(
     clock: () -> Long = System::currentTimeMillis,
     sleep: (Long) -> Unit = Thread::sleep,
 ) {
+    private val userAgent = Interceptor { chain ->
+        chain.proceed(chain.request().newBuilder().header("User-Agent", USER_AGENT).build())
+    }
+
     private val baseClient = OkHttpClient.Builder()
-        .addInterceptor { chain ->
-            chain.proceed(chain.request().newBuilder().header("User-Agent", USER_AGENT).build())
-        }
+        .addInterceptor(userAgent)
         .addInterceptor(RateLimitInterceptor(sleep = sleep))
         .build()
 
@@ -47,6 +51,12 @@ class ApiClient(
             .authenticator(TokenAuthenticator(tokens))
             .build(),
     ).create(IntraApi::class.java)
+
+    // For the image loader: CDN requests, outside the API rate limit, with the token only on profile photos.
+    val images: OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor(userAgent)
+        .addInterceptor(CdnAuthInterceptor(tokens))
+        .build()
 
     private fun retrofit(baseUrl: String, client: OkHttpClient): Retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)

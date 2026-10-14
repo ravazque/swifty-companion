@@ -4,6 +4,7 @@ import android.app.Application
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.svg.SvgDecoder
 
 class SwiftyApp : Application(), SingletonImageLoader.Factory {
@@ -15,9 +16,12 @@ class SwiftyApp : Application(), SingletonImageLoader.Factory {
         container = AppContainer(this)
     }
 
-    // Coalition logos are SVG files, which Coil only decodes with this extra decoder.
+    // Photos come through the client that adds the API token; coalition logos are SVG. GIF photos show their first frame.
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
-            .components { add(SvgDecoder.Factory()) }
+            .components {
+                add(OkHttpNetworkFetcherFactory(callFactory = { container.images }))
+                add(SvgDecoder.Factory())
+            }
             .build()
 }
