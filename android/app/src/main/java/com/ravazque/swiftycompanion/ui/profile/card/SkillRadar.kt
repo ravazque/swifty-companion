@@ -51,10 +51,8 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-// Radar chart in the intra's style: five rings on the 0-21 skill scale, one spoke per skill
-// with its name at the end, and the levels as a filled polygon. The radius is the largest one
-// that keeps every label inside; labels that would still collide are pushed apart. Tapping a
-// point or a name shows that skill's level and percentage in a bubble.
+// Radar chart: five rings on the 0-21 scale, one spoke and label per skill, the levels as a filled polygon; the
+// radius keeps every label inside, colliding labels are pushed apart, a tap on a point or name opens a bubble.
 
 private val Grid = Color.White.copy(alpha = 0.1f)
 
