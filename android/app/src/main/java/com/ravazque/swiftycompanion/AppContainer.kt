@@ -23,6 +23,7 @@ class AppContainer(context: Context) {
     private val settings = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     val tokens = client.tokens
+    val images = client.images
     val repository = UserRepository(api = client.api, tokens = tokens, visibilityStore = PrefsVisibilityStore(settings))
     val projectViews = PrefsProjectViewStore(settings)
     val session = SessionManager(
