@@ -51,9 +51,8 @@ data class Cursus(
 
     val isPiscine: Boolean get() = slug == PISCINE_SLUG
 
-    // The API only lists the skills a user has touched. The main cursus and the piscine charts
-    // always show all of their axes, with the untouched ones at zero: the main cursus
-    // alphabetically, the piscine in the intra's order.
+    // The API lists only the skills a user has touched; both charts show every axis, untouched ones at zero
+    // (the main cursus alphabetically, the piscine in the intra's order).
     val chartSkills: List<Skill>
         get() {
             val levels = skills.associate { it.name to it.level }

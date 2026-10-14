@@ -30,11 +30,8 @@ fun ProfileKind.isHidden(visibility: Visibility): Boolean = when (this) {
     ProfileKind.STUDENT, ProfileKind.TRANSCENDER, ProfileKind.ALUMNI -> false
 }
 
-// The API has no single field for this. Checked in order: staff flag; alumni flag or grade;
-// no main cursus or a kickoff still to come (a pisciner); a main cursus already closed (end_at:
-// a past blackholed_at alone does not close it, many active students keep one); an inactive
-// account with the cursus still open (on freeze; the API has no freeze field); the Transcender
-// grade; anyone else in the main cursus is a student.
+// No single API field says this. In order: staff; alumni; not started (no main cursus or a future kickoff);
+// blackholed (main cursus closed, end_at); on freeze (inactive account, cursus open); transcender; student.
 fun profileKind(isStaff: Boolean, isAlumni: Boolean, isActive: Boolean, main: Cursus?, now: Instant): ProfileKind {
     if (isStaff) return ProfileKind.STAFF
     if (isAlumni || main?.grade == ALUMNI_GRADE) return ProfileKind.ALUMNI
@@ -56,9 +53,8 @@ sealed interface AlumniDeadline {
     data class Due(val date: LocalDate) : AlumniDeadline
 }
 
-// A transcender has eight months from the last project that gave experience (the latest passed
-// one in the main cursus) to become alumni; an open work experience pauses that count. Null for
-// anyone else or without any passed project.
+// A transcender has eight months from the latest passed project of the main cursus to become alumni;
+// an open work experience pauses the count. Null for anyone else or without any passed project.
 fun Profile.alumniDeadline(zone: ZoneId): AlumniDeadline? {
     val main = cursus.firstOrNull { it.slug == Cursus.MAIN_SLUG }
     if (kind != ProfileKind.TRANSCENDER || main == null) return null

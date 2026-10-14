@@ -75,9 +75,8 @@ import com.ravazque.swiftycompanion.ui.theme.SwiftyTheme
 import com.ravazque.swiftycompanion.ui.theme.TextMain
 import java.util.Locale
 
-// Profile card: the front here, the skills chart on the back (CardBack.kt); a tap flips it.
-// Every size is a multiple of one unit (card width / 32), so the card scales as a single piece
-// on any screen; its text deliberately ignores the system font scale.
+// Profile card: the front here, the skills chart on the back (CardBack.kt); a tap flips it. Every size is a
+// multiple of one unit (card width / 32), so it scales as one piece; its text ignores the system font scale.
 
 internal const val CARD_RATIO = 5f / 7f
 private val FlipEasing = CubicBezierEasing(0.2f, 0.7f, 0.3f, 1f)

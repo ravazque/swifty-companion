@@ -65,9 +65,8 @@ import com.ravazque.swiftycompanion.ui.profile.card.ProfileCard
 import com.ravazque.swiftycompanion.ui.profile.card.accentFor
 import com.ravazque.swiftycompanion.ui.theme.SwiftyTheme
 
-// Below 600 dp one scrolling column; from 600 dp (tablets, phones in landscape) the card and
-// details on the left and the projects on the right, each pane with its own scroll. On wide
-// screens both panes stay together in the middle, so no empty strip belongs to the project list.
+// Below 600 dp one scrolling column; from 600 dp the card and details on the left and the projects on the
+// right, each pane with its own scroll, both kept together in the middle on wide screens.
 private val TwoPaneMinWidth = 600.dp
 private val PaneGap = 24.dp
 private val PanePadding = 16.dp
@@ -161,9 +160,8 @@ private fun ProfileBody(profile: Profile, state: ProfileUiState, actions: Profil
     val sideScroll = rememberScrollState()
     val projectList = rememberLazyListState()
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        // The height with the top bar fully shown (its offset is negative while it scrolls away), so the
-        // card keeps its size while the bar moves. The side pane is as wide as fits the whole card in
-        // that height, but never so narrow that the card's text gets unreadable.
+        // Height with the top bar fully shown, so the card keeps its size while the bar scrolls away; the side
+        // pane is as wide as fits the whole card in it, within the limits that keep its text readable.
         val height = maxHeight + with(LocalDensity.current) { topBarOffset().toDp() }
         val above = if (profile.cursus.size > 1) SelectorHeight + 16.dp else 0.dp
         val sideWidth = min(maxWidth * 0.4f, (height - 32.dp - above) * CARD_RATIO).coerceIn(CardMinWidth, CardMaxWidth)

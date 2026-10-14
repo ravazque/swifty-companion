@@ -23,9 +23,8 @@ import androidx.core.content.edit
 import com.ravazque.swiftycompanion.R
 import java.util.Locale
 
-// The app's language, chosen inside the app. Android 13+ keeps it in the system's per-app
-// language setting (which also changes it from the system settings); older versions keep it in
-// preferences and MainActivity applies it when it is created.
+// The language chosen inside the app: Android 13+ keeps it in the system's per-app language setting,
+// older versions in preferences, applied by MainActivity when it is created.
 object AppLanguage {
     private const val PREFS = "settings"
     private const val KEY = "language"
