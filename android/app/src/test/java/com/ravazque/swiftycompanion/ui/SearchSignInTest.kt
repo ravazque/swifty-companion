@@ -107,6 +107,22 @@ class SearchSignInTest {
     }
 
     @Test
+    fun aMalformedRedirectIsAFailedSignInNotACrash() {
+        val viewModel = viewModel().apply {
+            search()
+            signIn()
+        }
+        val state = await { viewModel.openLogin.first() }.toHttpUrl().queryParameter("state")
+
+        viewModel.completeLogin("$REDIRECT_URI?state=$state&code=%zz")
+        await { while (viewModel.state.value.loading) kotlinx.coroutines.delay(10) }
+
+        assertEquals(AppError.LoginFailed, viewModel.state.value.error)
+        assertNull(viewModel.account.value)
+        assertEquals(0, intra.server.requestCount)
+    }
+
+    @Test
     fun closingTheConsentKeepsTheSearchScreenAsItWas() {
         val viewModel = viewModel().apply {
             search()

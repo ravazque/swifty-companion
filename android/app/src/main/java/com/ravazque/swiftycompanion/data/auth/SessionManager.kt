@@ -67,7 +67,8 @@ class SessionManager(
         if (!redirect.startsWith(REDIRECT_URI)) return null
         val pending = store.loadPending() ?: return null
         store.savePending(null)
-        val query = queryOf(redirect)
+        // A malformed redirect (a bad % escape) fails the sign-in instead of crashing the app.
+        val query = runCatching { queryOf(redirect) }.getOrElse { throw AppError.LoginFailed }
         if (query["state"] != pending.state) throw AppError.LoginFailed
         if (query["error"] == ACCESS_DENIED) throw AppError.LoginCancelled
         val code = query["code"] ?: throw AppError.LoginFailed

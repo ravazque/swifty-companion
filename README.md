@@ -147,7 +147,7 @@ button when retrying can help. The English messages:
 
 ### Tests
 
-`make test` runs 80 unit tests in 13 classes on the JVM. The network tests
+`make test` runs 82 unit tests in 13 classes on the JVM. The network tests
 use a local HTTP server that imitates the token, `/v2/me` and user endpoints,
 so they go through the real OkHttp and Retrofit stack without touching the
 API. They cover:
@@ -163,9 +163,9 @@ API. They cover:
   selection, the chart axes, the project filter and sort orders, login
   validation;
 - the sign-in: authorize address (state, PKCE challenge checked against the
-  RFC 7636 example), code exchange, a forged `state`, refused sign-ins, repeated
-  redirects, sign-out, new terms versions, and a sign-in that survives Android
-  killing the app;
+  RFC 7636 example), code exchange, a forged `state`, a malformed redirect,
+  refused sign-ins, repeated redirects, sign-out, new terms versions, and a
+  sign-in that survives Android killing the app;
 - state restored after process death: search text, selected cursus, card side,
   project filter and order, search options.
 
@@ -492,7 +492,7 @@ both inspector actions.
 - **Architecture**: MVVM with `StateFlow`, dependencies wired by hand
 - **Layouts**: one column below 600 dp, two panes from 600 dp
 - **Languages**: English and Spanish, switched at runtime
-- **Tests**: 80 JVM unit tests with JUnit 4, kotlinx-coroutines-test and
+- **Tests**: 82 JVM unit tests with JUnit 4, kotlinx-coroutines-test and
   OkHttp's MockWebServer as a fake of the API
 
 ## 🔧 Requirements

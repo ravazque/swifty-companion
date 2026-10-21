@@ -81,6 +81,15 @@ class SessionTest {
     }
 
     @Test
+    fun aMalformedRedirectFailsTheLoginWithoutAnyRequest() = runTest {
+        val state = stateOf(session.startLogin())
+
+        assertEquals(AppError.LoginFailed, failureOf { session.completeLogin("$REDIRECT_URI?state=$state&code=%zz") })
+        assertNull(store.pending)
+        assertEquals(0, intra.server.requestCount)
+    }
+
+    @Test
     fun deniedAccessIsACancelledLogin() = runTest {
         val state = stateOf(session.startLogin())
 

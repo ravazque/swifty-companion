@@ -81,7 +81,7 @@ make           # the list of targets
 make install   # checks the JDK, the SDK and .env; builds nothing
 make apk       # builds the debug APK into android/app/build/outputs/apk/debug/
 make run       # builds, installs the debug build on the connected device and opens it
-make test      # 80 unit tests on the JVM
+make test      # 82 unit tests on the JVM
 make lint      # static checks
 make clean     # Gradle's build output
 make fclean    # clean, and Gradle's project caches
@@ -94,7 +94,8 @@ opens in Android Studio, where the `app` configuration runs on a virtual
 device. The unit tests run against a local fake of the API (OkHttp's
 MockWebServer), so they need no network: token reuse and renewal, error
 mapping, blocked logins, profile kinds, project status and order, the sign-in
-flow, state restoration, and the token on profile photos only.
+flow (a malformed redirect included), state restoration, and the token on
+profile photos only.
 
 ## Bonus
 
