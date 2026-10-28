@@ -18,6 +18,7 @@ data class Profile(
     val cursus: List<Cursus>,
     val projects: List<ProjectRecord>,
     val coalition: Coalition?,
+    val campus: Campus? = null,
 ) {
     val mainCursus: Cursus? get() = cursus.firstOrNull()
 
@@ -122,6 +123,8 @@ fun List<ProjectRecord>.orderedBy(sort: ProjectSort): List<ProjectRecord> = when
     ProjectSort.GRADE -> sortedWith(compareBy<ProjectRecord> { it.finalMark == null }.thenByDescending { it.finalMark })
     ProjectSort.NAME -> sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 }
+
+data class Campus(val id: Int, val name: String)
 
 data class Coalition(val id: Int, val name: String, val color: String?, val imageUrl: String?, val score: Int? = null)
 

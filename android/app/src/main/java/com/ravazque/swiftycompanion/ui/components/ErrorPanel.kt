@@ -24,6 +24,9 @@ fun AppError.message(): String = when (this) {
     AppError.InvalidLogin -> stringResource(R.string.error_invalid_login)
     is AppError.NotFound -> stringResource(R.string.error_not_found, login)
     is AppError.Hidden -> stringResource(kind.hiddenMessage, login)
+    is AppError.OtherCampus ->
+        if (campus.isNullOrBlank()) stringResource(R.string.error_other_campus_unknown, login)
+        else stringResource(R.string.error_other_campus, login, campus)
     AppError.Network -> stringResource(R.string.error_network)
     AppError.RateLimited -> stringResource(R.string.error_rate_limited)
     AppError.MissingCredentials -> stringResource(R.string.error_missing_credentials)
@@ -39,7 +42,7 @@ fun AppError.message(): String = when (this) {
 // Errors about what the user typed are shown under the text field instead of in a panel.
 val AppError.isInputError: Boolean
     get() = this is AppError.EmptyLogin || this is AppError.InvalidLogin || this is AppError.NotFound ||
-        this is AppError.Hidden
+        this is AppError.Hidden || this is AppError.OtherCampus
 
 private val ProfileKind.hiddenMessage: Int
     get() = when (this) {

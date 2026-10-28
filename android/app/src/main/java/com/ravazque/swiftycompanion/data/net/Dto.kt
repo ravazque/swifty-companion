@@ -31,7 +31,15 @@ data class UserDto(
     @SerialName("projects_users") val projectsUsers: List<ProjectUserDto> = emptyList(),
     val titles: List<TitleDto> = emptyList(),
     @SerialName("titles_users") val titlesUsers: List<TitleUserDto> = emptyList(),
+    val campus: List<CampusDto> = emptyList(),
+    @SerialName("campus_users") val campusUsers: List<CampusUserDto> = emptyList(),
 )
+
+@Serializable
+data class CampusDto(val id: Int, val name: String = "")
+
+@Serializable
+data class CampusUserDto(@SerialName("campus_id") val campusId: Int, @SerialName("is_primary") val isPrimary: Boolean = false)
 
 @Serializable
 data class ImageDto(val link: String? = null, val versions: ImageVersionsDto? = null)

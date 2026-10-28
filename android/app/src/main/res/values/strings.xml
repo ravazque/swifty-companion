@@ -19,6 +19,8 @@
     <string name="error_hidden_pisciner">%1$s has not started the cursus yet.\nPiscine profiles are not shown.</string>
     <string name="error_hidden_frozen">%1$s is on freeze.\nTurn on Freeze below to see these profiles.</string>
     <string name="error_hidden_blackholed">%1$s was absorbed by the black hole.\nTurn on Blackholed below to see these profiles.</string>
+    <string name="error_other_campus">%1$s belongs to another campus (%2$s).\nOnly 42 Madrid profiles are shown.</string>
+    <string name="error_other_campus_unknown">%1$s belongs to another campus.\nOnly 42 Madrid profiles are shown.</string>
     <string name="error_network">No connection. Check your network and try again.</string>
     <string name="error_rate_limited">Too many requests. Wait a moment and try again.</string>
     <string name="error_missing_credentials">API credentials are missing. Add them to .env and rebuild.</string>

@@ -2,6 +2,7 @@ package com.ravazque.swiftycompanion.ui
 
 import androidx.lifecycle.SavedStateHandle
 import com.ravazque.swiftycompanion.FakeIntra
+import com.ravazque.swiftycompanion.MADRID
 import com.ravazque.swiftycompanion.MINIMAL_USER
 import com.ravazque.swiftycompanion.MemoryProjectViewStore
 import com.ravazque.swiftycompanion.json
@@ -99,12 +100,12 @@ class StateRestoreTest {
 // Two students, a transcender, an alumni, a staff member and a student on freeze.
 private val USERS = mapOf(
     "jdoe" to MINIMAL_USER,
-    "amy" to """{"id": 2, "login": "amy", "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z",
+    "amy" to """{"id": 2, "login": "amy", $MADRID, "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z",
         "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}""",
-    "tran" to """{"id": 3, "login": "tran", "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z", "grade": "Transcender",
+    "tran" to """{"id": 3, "login": "tran", $MADRID, "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z", "grade": "Transcender",
         "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}""",
-    "old" to """{"id": 4, "login": "old", "alumni?": true}""",
-    "boss" to """{"id": 5, "login": "boss", "staff?": true}""",
-    "away" to """{"id": 6, "login": "away", "active?": false, "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z",
+    "old" to """{"id": 4, "login": "old", $MADRID, "alumni?": true}""",
+    "boss" to """{"id": 5, "login": "boss", $MADRID, "staff?": true}""",
+    "away" to """{"id": 6, "login": "away", $MADRID, "active?": false, "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z",
         "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}""",
 )

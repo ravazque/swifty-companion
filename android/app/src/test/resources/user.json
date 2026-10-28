@@ -43,8 +43,8 @@
     { "status": "searching_a_group", "validated?": null, "final_mark": null, "marked_at": null, "cursus_ids": [21], "project": { "id": 7, "name": "Team" } },
     { "status": "creating_group", "validated?": null, "final_mark": null, "marked_at": null, "cursus_ids": [21], "project": { "id": 8, "name": "Squad" } }
   ],
-  "campus": [ { "id": 1, "name": "North" }, { "id": 2, "name": "South" } ],
-  "campus_users": [ { "campus_id": 1, "is_primary": false }, { "campus_id": 2, "is_primary": true } ],
+  "campus": [ { "id": 66, "name": "Forty2" }, { "id": 22, "name": "Madrid" } ],
+  "campus_users": [ { "campus_id": 66, "is_primary": false }, { "campus_id": 22, "is_primary": true } ],
   "titles": [ { "id": 5, "name": "Mastermind %login" }, { "id": 6, "name": "Other" } ],
   "titles_users": [ { "title_id": 5, "selected": true }, { "title_id": 6, "selected": false } ]
 }

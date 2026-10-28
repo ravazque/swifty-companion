@@ -15,6 +15,8 @@
     <string name="error_hidden_pisciner">%1$s aún no ha empezado el cursus.\nLos perfiles de piscina no se muestran.</string>
     <string name="error_hidden_frozen">%1$s está en freeze.\nActiva Freeze abajo para ver estos perfiles.</string>
     <string name="error_hidden_blackholed">%1$s está en el agujero negro.\nActiva Blackholed abajo para ver estos perfiles.</string>
+    <string name="error_other_campus">%1$s es de otro campus (%2$s).\nSolo se muestran perfiles de 42 Madrid.</string>
+    <string name="error_other_campus_unknown">%1$s es de otro campus.\nSolo se muestran perfiles de 42 Madrid.</string>
     <string name="error_network">Sin conexión. Revisa la red e inténtalo de nuevo.</string>
     <string name="error_rate_limited">Demasiadas peticiones. Espera un momento e inténtalo de nuevo.</string>
     <string name="error_missing_credentials">Faltan las credenciales de la API. Añádelas a .env y recompila.</string>

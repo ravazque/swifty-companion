@@ -21,6 +21,9 @@ val ProfileKind.group: ProfileGroup
 // Kinds the search may also show besides students, transcenders and alumni; all off by default.
 data class Visibility(val staff: Boolean = false, val blackholed: Boolean = false, val frozen: Boolean = false)
 
+// 42 Madrid: profiles whose primary campus is any other are never shown, whatever their kind.
+const val HOME_CAMPUS_ID = 22
+
 // People who have not started the main cursus are never shown.
 fun ProfileKind.isHidden(visibility: Visibility): Boolean = when (this) {
     ProfileKind.STAFF -> !visibility.staff

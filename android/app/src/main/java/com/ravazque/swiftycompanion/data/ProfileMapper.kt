@@ -4,6 +4,7 @@ import com.ravazque.swiftycompanion.data.net.CoalitionDto
 import com.ravazque.swiftycompanion.data.net.CursusUserDto
 import com.ravazque.swiftycompanion.data.net.ProjectUserDto
 import com.ravazque.swiftycompanion.data.net.UserDto
+import com.ravazque.swiftycompanion.model.Campus
 import com.ravazque.swiftycompanion.model.Coalition
 import com.ravazque.swiftycompanion.model.Cursus
 import com.ravazque.swiftycompanion.model.Profile
@@ -34,7 +35,14 @@ fun UserDto.toProfile(now: Instant): Profile {
         cursus = cursus,
         projects = projectsUsers.map { it.toRecord() }.orderedBy(ProjectSort.DATE),
         coalition = null,
+        campus = primaryCampus(),
     )
+}
+
+// A user can belong to several campuses: the one the intra marks as primary, or the only one listed.
+private fun UserDto.primaryCampus(): Campus? {
+    val id = campusUsers.firstOrNull { it.isPrimary }?.campusId ?: campus.singleOrNull()?.id ?: return null
+    return Campus(id, campus.firstOrNull { it.id == id }?.name.orEmpty())
 }
 
 // Only the four coalitions of the main cursus count, in this order if a user is in more than one;

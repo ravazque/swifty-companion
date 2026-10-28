@@ -22,8 +22,9 @@ account through **OAuth2 with PKCE**, and only the login is kept. Searches
 themselves use the application's own token (client credentials), which is
 reused across requests and restarts and renewed before it expires or as soon
 as the server rejects it. Requests are spaced to stay under the API's rate
-limit, and every failure — invalid login, unknown login, no network, rate
-limit, server error — gets its own translated message.
+limit, and every failure — invalid login, unknown login, a profile of another
+campus, no network, rate limit, server error — gets its own translated message.
+Only profiles whose primary campus is **42 Madrid** are shown.
 
 The interface is in **English and Spanish**, switchable inside the app.
 
@@ -73,7 +74,7 @@ The interface is in **English and Spanish**, switchable inside the app.
 | **model** | Login | Validation of the typed login before any request; the blocked logins read from `.env` |
 | **model** | Profile kind | Staff, alumni, not started, blackholed, on freeze, transcender or student, decided from the user and the main cursus |
 | **model** | AppError | One typed error per failure, each with its own translated message |
-| **data** | UserRepository | Fetches the user, classifies the profile, stops there if it is hidden, then fetches the coalitions and the user's score in the main one |
+| **data** | UserRepository | Fetches the user, stops there if the profile belongs to another campus or is hidden, then fetches the coalitions and the user's score in the main one |
 | **data** | ProfileMapper | JSON to model: project status, order, the four main cursus coalitions, alumni deadline |
 | **data** | Preferences | Search options (Staff, Blackholed, Freeze) and the project filter and order of each group of profiles |
 | **data/auth** | TokenManager | App token in memory and in private preferences, reused until one minute before it expires |
@@ -118,8 +119,8 @@ where the `app` configuration runs once Gradle has synced.
 2. The first search asks to accept the terms of use and the privacy policy and
    to sign in with 42 in the page that opens; the search then runs on its own.
    The login at the top right signs out.
-3. The profile opens if the login exists and belongs to an active student or
-   an alumnus. The refresh icon reloads it.
+3. The profile opens if the login exists, its primary campus is 42 Madrid and
+   it belongs to an active student or an alumnus. The refresh icon reloads it.
 4. A tap on the card turns it to the skills radar; a tap on a point or a skill
    name shows its level and percentage. The chips above the card choose the
    cursus.
@@ -136,6 +137,7 @@ button when retrying can help. The English messages:
 | Empty field | Type a login |
 | Malformed login | A login only has lowercase letters, digits, hyphens and underscores |
 | Unknown login | No user with login `jdoe` |
+| Another campus | `jdoe` belongs to another campus (Paris). Only 42 Madrid profiles are shown. |
 | Not started | `jdoe` has not started the cursus yet. Piscine profiles are not shown. |
 | Staff, freeze, blackholed | `jdoe` is staff. Turn on Staff below to see staff profiles. (and the same for Freeze and Blackholed) |
 | No network | No connection. Check your network and try again. |
@@ -147,7 +149,7 @@ button when retrying can help. The English messages:
 
 ### Tests
 
-`make test` runs 82 unit tests in 13 classes on the JVM. The network tests
+`make test` runs 85 unit tests in 13 classes on the JVM. The network tests
 use a local HTTP server that imitates the token, `/v2/me` and user endpoints,
 so they go through the real OkHttp and Retrofit stack without touching the
 API. They cover:
@@ -156,7 +158,9 @@ API. They cover:
   after a `401`, rejected credentials, an unreadable token answer and both
   inspector actions;
 - error mapping (`404`, `429`, `5xx`, malformed JSON, no connection), blocked
-  logins without any request, and hidden profiles without extra requests;
+  logins without any request, and hidden profiles and profiles of other
+  campuses without extra requests, the primary campus deciding for users of
+  several;
 - the coalition kept, the user's score in it (also when that call fails) and
   the compact score format;
 - the alumni deadline, the profile kind rules, JSON to model mapping, cursus
@@ -217,6 +221,15 @@ changing them. Without them the build still succeeds and the app explains what
 is wrong when a search is made. Application secrets expire periodically; when
 searches fail with "The API rejected the credentials", copy the current secret
 from the application page.
+
+### Campus
+
+Only profiles whose primary campus is 42 Madrid are shown, before any other
+rule. A user can belong to several campuses (`campus` in the API), so the app
+takes the one marked `is_primary` in `campus_users`, or the only campus listed.
+Any other campus is answered with its name, and the profile kinds below are not
+even looked at. The coalitions shown are those of 42 Madrid for the same
+reason.
 
 ### Profile kinds
 
@@ -372,11 +385,12 @@ reports from inside an interceptor, so not even an unreadable token answer can
 crash the app. Requests are spaced to stay under 2 per second, and a `429` is
 retried after the delay in its answer.
 
-### Hidden profiles cost one request
+### Profiles that are not shown cost one request
 
 ```
-GET /v2/users/:login ── classify ── hidden? ── stop (1 request)
-                                      └─ visible ── coalitions ── coalitions_users (score)
+blocked login ── stop (no request)
+GET /v2/users/:login ── another campus or hidden? ── stop (1 request)
+                                            └─ shown ── coalitions ── coalitions_users (score)
 ```
 
 If either of the coalition calls fails the profile still shows, without the
@@ -492,7 +506,7 @@ both inspector actions.
 - **Architecture**: MVVM with `StateFlow`, dependencies wired by hand
 - **Layouts**: one column below 600 dp, two panes from 600 dp
 - **Languages**: English and Spanish, switched at runtime
-- **Tests**: 82 JVM unit tests with JUnit 4, kotlinx-coroutines-test and
+- **Tests**: 85 JVM unit tests with JUnit 4, kotlinx-coroutines-test and
   OkHttp's MockWebServer as a fake of the API
 
 ## 🔧 Requirements

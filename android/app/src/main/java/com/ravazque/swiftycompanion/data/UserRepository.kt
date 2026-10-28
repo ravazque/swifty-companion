@@ -5,6 +5,7 @@ import com.ravazque.swiftycompanion.data.auth.TokenException
 import com.ravazque.swiftycompanion.data.auth.TokenManager
 import com.ravazque.swiftycompanion.data.net.IntraApi
 import com.ravazque.swiftycompanion.model.AppError
+import com.ravazque.swiftycompanion.model.HOME_CAMPUS_ID
 import com.ravazque.swiftycompanion.model.Profile
 import com.ravazque.swiftycompanion.model.Visibility
 import com.ravazque.swiftycompanion.model.isHidden
@@ -38,7 +39,8 @@ class UserRepository(
         if (login in blockedLogins) throw AppError.NotFound(login)
         try {
             val profile = api.user(login).toProfile(now())
-            // Checked before the coalition calls: a hidden profile costs a single request.
+            // Checked before the coalition calls: a profile that is not shown costs a single request.
+            if (profile.campus?.id != HOME_CAMPUS_ID) throw AppError.OtherCampus(login, profile.campus?.name)
             if (profile.kind.isHidden(visibility)) throw AppError.Hidden(login, profile.kind)
             // The score is the user's own in that coalition (it can be negative).
             val coalition = optional { api.coalitions(login).mainCoalition() }?.let { main ->

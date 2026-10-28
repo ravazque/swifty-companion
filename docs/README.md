@@ -11,10 +11,10 @@ cursus, failed ones included. The app is in English and Spanish.
 
 - **Two screens.** The search screen validates the login and fetches the
   profile before opening the profile screen, so every error (empty or
-  malformed login, unknown login, hidden profile, no network, rate limit,
-  server error) appears under the search field, with a retry button when
-  retrying can help. The top bar arrow and the system back gesture return to
-  the search.
+  malformed login, unknown login, profile of another campus, hidden profile,
+  no network, rate limit, server error) appears under the search field, with a
+  retry button when retrying can help. The top bar arrow and the system back
+  gesture return to the search.
 - **Profile.** The card shows the identity and the numbers on its front and a
   radar chart of the skills on its back, drawn on a `Canvas`; a tap on a point
   or a skill name shows its level and percentage. A selector switches between
@@ -31,6 +31,10 @@ cursus, failed ones included. The app is in English and Spanish.
 - **Sign-in.** The first search asks to accept the terms of use and the
   privacy policy and to sign in with a 42 account (OAuth2 authorization code
   with PKCE, in a Custom Tab); only the login is kept.
+- **Campus.** Only profiles whose primary campus is 42 Madrid are shown: a user
+  of several campuses counts by the one marked primary, and any other campus is
+  answered with its name before the profile kind is looked at. The coalitions
+  are those of 42 Madrid too.
 - **Profile kinds.** The API has no single field for this, so the app decides
   from the user and the main cursus: active students and alumni are shown;
   people who have not started the cursus are not; staff, blackholed and frozen
@@ -81,7 +85,7 @@ make           # the list of targets
 make install   # checks the JDK, the SDK and .env; builds nothing
 make apk       # builds the debug APK into android/app/build/outputs/apk/debug/
 make run       # builds, installs the debug build on the connected device and opens it
-make test      # 82 unit tests on the JVM
+make test      # 85 unit tests on the JVM
 make lint      # static checks
 make clean     # Gradle's build output
 make fclean    # clean, and Gradle's project caches
@@ -93,9 +97,9 @@ is an install on the phone, not on the computer. The `android/` folder also
 opens in Android Studio, where the `app` configuration runs on a virtual
 device. The unit tests run against a local fake of the API (OkHttp's
 MockWebServer), so they need no network: token reuse and renewal, error
-mapping, blocked logins, profile kinds, project status and order, the sign-in
-flow (a malformed redirect included), state restoration, and the token on
-profile photos only.
+mapping, blocked logins, the campus and profile kinds, project status and
+order, the sign-in flow (a malformed redirect included), state restoration,
+and the token on profile photos only.
 
 ## Bonus
 

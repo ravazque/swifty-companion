@@ -3,6 +3,7 @@ package com.ravazque.swiftycompanion.data
 import com.ravazque.swiftycompanion.data.net.CoalitionDto
 import com.ravazque.swiftycompanion.data.net.IntraJson
 import com.ravazque.swiftycompanion.data.net.UserDto
+import com.ravazque.swiftycompanion.model.Campus
 import com.ravazque.swiftycompanion.model.ProfileKind
 import com.ravazque.swiftycompanion.model.ProjectStatus
 import org.junit.Assert.assertEquals
@@ -26,6 +27,15 @@ class ProfileMapperTest {
         assertEquals("Mastermind jdoe", profile.title)
         assertEquals(ProfileKind.TRANSCENDER, profile.kind)
         assertNull(profile.coalition)
+    }
+
+    @Test
+    fun keepsThePrimaryCampusOrTheOnlyOneListed() {
+        assertEquals(Campus(22, "Madrid"), profile.campus)
+
+        fun campusOf(json: String) = IntraJson.decodeFromString<UserDto>(json).toProfile(now).campus
+        assertEquals(Campus(1, "Paris"), campusOf("""{"id": 8, "login": "solo", "campus": [{"id": 1, "name": "Paris"}]}"""))
+        assertNull(campusOf("""{"id": 9, "login": "two", "campus": [{"id": 1, "name": "Paris"}, {"id": 22, "name": "Madrid"}]}"""))
     }
 
     @Test

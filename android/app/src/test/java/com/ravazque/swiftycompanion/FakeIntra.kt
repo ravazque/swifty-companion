@@ -24,9 +24,12 @@ import java.net.URLDecoder
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
-// The smallest profile the app shows: a student whose main cursus started in the past.
+// Primary campus of every fixture the app may show: profiles of other campuses are never shown.
+const val MADRID = """"campus_users": [{"campus_id": 22, "is_primary": true}]"""
+
+// The smallest profile the app shows: a 42 Madrid student whose main cursus started in the past.
 const val MINIMAL_USER =
-    """{"id": 1, "login": "jdoe", "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z", "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""
+    """{"id": 1, "login": "jdoe", $MADRID, "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z", "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""
 
 // Local stand-in for the API: token endpoint (app token and sign-in code exchange), /v2/me, user
 // endpoint and coalitions, with scriptable answers.

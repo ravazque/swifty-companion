@@ -1,6 +1,7 @@
 package com.ravazque.swiftycompanion.data
 
 import com.ravazque.swiftycompanion.FakeIntra
+import com.ravazque.swiftycompanion.MADRID
 import com.ravazque.swiftycompanion.MINIMAL_USER
 import com.ravazque.swiftycompanion.failureOf
 import com.ravazque.swiftycompanion.json
@@ -71,10 +72,10 @@ class RepositoryErrorsTest {
 
     @Test
     fun staffAndPiscinersAreHiddenWithoutAskingForTheirCoalition() = runTest {
-        intra.userResponse = { _, _ -> json(200, """{"id": 2, "login": "boss", "staff?": true}""") }
+        intra.userResponse = { _, _ -> json(200, """{"id": 2, "login": "boss", "staff?": true, $MADRID}""") }
         assertEquals(AppError.Hidden("boss", ProfileKind.STAFF), failureOf { intra.repository().fetch("boss") })
 
-        intra.userResponse = { _, _ -> json(200, """{"id": 3, "login": "newbie"}""") }
+        intra.userResponse = { _, _ -> json(200, """{"id": 3, "login": "newbie", $MADRID}""") }
         val repository = intra.repository()
         assertEquals(AppError.Hidden("newbie", ProfileKind.PISCINER), failureOf { repository.fetch("newbie") })
         assertNull(repository.cached("newbie"))
@@ -104,6 +105,25 @@ class RepositoryErrorsTest {
         assertEquals(AppError.Hidden("away", ProfileKind.FROZEN), failureOf { others.fetch("away") })
         assertEquals(1, intra.server.requestCount - intra.tokenRequests.get())
         assertEquals(ProfileKind.FROZEN, intra.repository(visibility = Visibility(frozen = true)).fetch("away").kind)
+    }
+
+    @Test
+    fun otherCampusProfilesAreRejectedWithoutAskingForTheirCoalition() = runTest {
+        intra.userResponse = { _, _ -> json(200, OTHER_CAMPUS_USER) }
+        val repository = intra.repository(visibility = Visibility(staff = true, blackholed = true, frozen = true))
+
+        assertEquals(AppError.OtherCampus("faraway", "Paris"), failureOf { repository.fetch("faraway") })
+        assertNull(repository.cached("faraway"))
+        assertEquals(1, intra.server.requestCount - intra.tokenRequests.get())
+
+        intra.userResponse = { _, _ -> json(200, """{"id": 7, "login": "nowhere"}""") }
+        assertEquals(AppError.OtherCampus("nowhere", null), failureOf { repository.fetch("nowhere") })
+    }
+
+    @Test
+    fun thePrimaryCampusDecidesForUsersOfSeveralCampuses() = runTest {
+        intra.userResponse = { _, _ -> json(200, TWO_CAMPUS_USER) }
+        assertEquals("both", intra.repository().fetch("both").login)
     }
 
     @Test
@@ -138,12 +158,20 @@ class RepositoryErrorsTest {
     }
 }
 
-private const val STAFF_USER = """{"id": 2, "login": "boss", "staff?": true}"""
+private const val STAFF_USER = """{"id": 2, "login": "boss", "staff?": true, $MADRID}"""
 
-private const val BLACKHOLED_USER = """{"id": 4, "login": "gone", "cursus_users": [{"begin_at": "2026-05-18T07:42:00.000Z",
+private const val BLACKHOLED_USER = """{"id": 4, "login": "gone", $MADRID, "cursus_users": [{"begin_at": "2026-05-18T07:42:00.000Z",
     "end_at": "2026-07-03T22:01:04.781Z", "blackholed_at": "2026-08-05T07:42:00.000Z", "grade": "Cadet",
     "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""
 
-private const val FROZEN_USER = """{"id": 5, "login": "away", "active?": false, "cursus_users": [{"begin_at": "2024-09-16T07:42:00.000Z",
+private const val FROZEN_USER = """{"id": 5, "login": "away", "active?": false, $MADRID, "cursus_users": [{"begin_at": "2024-09-16T07:42:00.000Z",
     "end_at": null, "blackholed_at": "2026-11-26T07:42:00.000Z", "grade": "Cadet",
     "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""
+
+private const val OTHER_CAMPUS_USER = """{"id": 6, "login": "faraway", "campus": [{"id": 1, "name": "Paris"}],
+    "campus_users": [{"campus_id": 1, "is_primary": true}],
+    "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z", "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""
+
+private const val TWO_CAMPUS_USER = """{"id": 8, "login": "both", "campus": [{"id": 66, "name": "Forty2"}, {"id": 22, "name": "Madrid"}],
+    "campus_users": [{"campus_id": 66, "is_primary": false}, {"campus_id": 22, "is_primary": true}],
+    "cursus_users": [{"begin_at": "2020-01-01T00:00:00.000Z", "cursus": {"id": 21, "name": "42cursus", "slug": "42cursus"}}]}"""
